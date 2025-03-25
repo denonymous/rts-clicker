@@ -1,6 +1,6 @@
 import type { Element } from './common'
 
-type Unit = Element & {
+export type Unit = Element & {
   name: string
   hitPoints: number
   movementSpeed: number
