@@ -3,7 +3,7 @@ import { CommandCentersContext } from '../context/CommandCentersContext'
 import { CommandCenter } from '../types/structures'
 import { COMMAND_CENTER_INIT_HP } from '../constants'
 import { TaskQueueComponent } from './TaskQueueComponent'
-import { CreateEngineerTaskButton } from './buttons/CreateEngineerTaskButton'
+import { CreateEngineerTaskButton } from './buttons/CommandCenter/CreateEngineerTaskButton'
 
 export const CommandCentersComponent = () => {
   const { commandCenters } = useContext(CommandCentersContext)

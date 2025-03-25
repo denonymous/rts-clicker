@@ -23,3 +23,9 @@ export type Element = {
   availableTasks: readonly TaskKey[]
   taskQueue: TaskQueue
 }
+
+type SerializedCoords = string
+type ElementId = string
+export type Grid = Map<SerializedCoords, Set<ElementId>>
+
+export type ErrorCode = 'ELEMENT_NOT_ON_GRID' | 'INVALID_GRID_COORDS'

@@ -28,7 +28,7 @@ export const createEngineer = ({ location }: CreateEngineerProps): Engineer => {
     __height: 1,
     location,
     name: `Engineer ${id}`,
-    availableTasks: ['CREATE_COMMAND_CENTER'],
+    availableTasks: ['CREATE_COMMAND_CENTER', 'MOVE TO'],
     hitPoints: BUILDER_INIT_HP,
     movementSpeed: BUILDER_INIT_MOVEMENT_SPEED,
     aggroRange: BUILDER_INIT_AGGRO_RANGE,

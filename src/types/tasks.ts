@@ -1,5 +1,7 @@
-export type TaskType = 'BUILD' | 'ASSIGNMENT'
-export type TaskKey = 'CREATE_ENGINEER' | 'CREATE_COMMAND_CENTER'
+import { Element } from './common'
+
+export type TaskType = 'BUILD' | 'MOVE'
+export type TaskKey = 'CREATE_ENGINEER' | 'CREATE_COMMAND_CENTER' | 'MOVE TO'
 
 export type TaskStatus = 'QUEUED' | 'NOT ENOUGH RESOURCES' | 'IN PROGRESS' | 'COMPLETE'
 
@@ -24,6 +26,9 @@ export type BuildTask = Task & {
   onComplete: () => void
 }
 
-export type AssignmentTask = Task & {}
+export type MoveTask = Task & {
+  target: Element
+  onComplete: () => void
+}
 
-export type TaskQueue = readonly (BuildTask | AssignmentTask)[]
+export type TaskQueue = readonly (BuildTask | MoveTask)[]

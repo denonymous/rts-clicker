@@ -3,7 +3,8 @@ import { BUILDER_INIT_HP } from '../constants'
 import { EngineersContext } from '../context/EngineersContext'
 import { Engineer } from '../types/units'
 import { TaskQueueComponent } from './TaskQueueComponent'
-import { CreateCommandCenterTaskButton } from './buttons/CreateCommandCenterTaskButton'
+import { CreateCommandCenterTaskButton } from './buttons/Engineer/CreateCommandCenterTaskButton'
+import { MoveToTaskButton } from './buttons/Engineer/MoveToTaskButton'
 
 export const EngineersComponent = () => {
   const { engineers } = useContext(EngineersContext)
@@ -37,7 +38,9 @@ const AvailableTasksComponent = ({ engineer }: EngProps) =>
       engineer.availableTasks.map(taskKey =>
         taskKey === 'CREATE_COMMAND_CENTER'
           ? <CreateCommandCenterTaskButton key={`${engineer.__id}-createCommandCenterButton`} engineer={engineer} />
-          : <></>
+          : taskKey === 'MOVE TO'
+            ? <MoveToTaskButton key={`${engineer.__id}-moveToButton`} engineer={engineer} />
+            : <></>
       )
     }
   </section>
