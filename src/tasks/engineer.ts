@@ -13,6 +13,7 @@ import {
   BUILDER_INIT_MOVEMENT_SPEED,
   BUILDER_INIT_REPAIR_SPEED
 } from '../constants'
+import { randomUnitName } from '../util/utils'
 
 type CreateEngineerProps = {
   location: Location
@@ -27,7 +28,7 @@ export const createEngineer = ({ location }: CreateEngineerProps): Engineer => {
     __width: 1,
     __height: 1,
     location,
-    name: `Engineer ${id}`,
+    name: `Engineer ${randomUnitName()}`,
     availableTasks: ['CREATE_COMMAND_CENTER', 'MOVE TO'],
     hitPoints: BUILDER_INIT_HP,
     movementSpeed: BUILDER_INIT_MOVEMENT_SPEED,
