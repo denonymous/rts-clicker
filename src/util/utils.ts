@@ -1,12 +1,5 @@
-import { structures, units } from "../names"
-import { Coords, Element, ErrorCode, Grid } from "../types/common"
-import { Task, TaskCost } from "../types/tasks"
-
-export const randomStructureName = () =>
-  structures[Math.floor(Math.random() * structures.length)]
-
-export const randomUnitName = () =>
-  units[Math.floor(Math.random() * units.length)]
+import type { Coords, Resources } from '../types/common'
+import type { Task } from '../types/tasks'
 
 /**
  * Take a timestamp of start, duration in seconds, and watermark timestamp for comparison
@@ -19,19 +12,31 @@ export const randomUnitName = () =>
 export const calculatePercentDone = (startedAt: number, duration: number, watermark: number): number =>
   (((watermark - startedAt) / 1_000) * 100) / duration
 
-export const canAfford = (currentResources: TaskCost, taskCost: TaskCost): boolean =>
+/**
+ * Return whether the given task cost can be afforded against the given resource pool
+ */
+export const canAfford = (currentResources: Resources, taskCost: Resources): boolean =>
   currentResources.crystals >= taskCost.crystals &&
   currentResources.gas >= taskCost.gas
 
+/**
+ * Mark a given task as having begun and return it
+ */
 export const markTaskBegun = <T extends Task>(task: T, startedAt: number): T => ({ ...task, startedAt, status: 'IN PROGRESS' })
 
+/**
+ * Mark a given task as having been too expensive to start and return it
+ */
 export const markTaskCannotAfford = <T extends Task>(task: T): T => ({ ...task, status: 'NOT ENOUGH RESOURCES' })
 
+/**
+ * Mark a given task as complete and return it
+ */
 export const markTaskDone = <T extends Task>(task: T, finishedAt: number): T => ({ ...task, finishedAt, status: 'COMPLETE' })
 
-export const findElementOnGrid = (grid: Grid, element: Element) =>
-  Array.from(grid.entries()).find(([_, elementIds]) => elementIds.has(element.__id))
-
+/**
+ * Return whether two sets of coords are within a given range
+ */
 export const elementsAreInRange = (first: Coords, second: Coords, range?: number) => {
   const _range = range || 2
 
@@ -46,7 +51,7 @@ export const elementsAreInRange = (first: Coords, second: Coords, range?: number
 /**
  * Take Coords of an Element looking to move and target Coords
  * 
- * Determine which axis mover is further on, determine correct direction,
+ * Determine which axis on which the mover is further away, determine correct direction,
  * and return Coords of 1 step in a direction of the target
  */
 export const calculateNextStep = (movingCoords: Coords, targetCoords: Coords) => {
@@ -56,73 +61,4 @@ export const calculateNextStep = (movingCoords: Coords, targetCoords: Coords) =>
   return Math.abs(distanceX) > Math.abs(distanceY)
     ? { x: distanceX < 0 ? movingCoords.x - 1 : movingCoords.x + 1, y: movingCoords.y }
     : { x: movingCoords.x, y: distanceY < 0 ? movingCoords.y - 1 : movingCoords.y + 1 }
-}
-
-export const placeElementOnGrid = (grid: Grid, element: Element, target: Coords): { grid: Grid, success: true } | { errorCode: ErrorCode, grid: Grid, success: false } => {
-  const targetIsValid = isValidMoveTarget(grid, target)
-  if (!targetIsValid.success) {
-    return {
-      errorCode: targetIsValid.errorCode,
-      grid,
-      success: false
-    }
-  }
-
-  const _target = JSON.stringify(target)
-
-  return {
-    grid: grid
-      .set(_target, targetIsValid.value.add(element.__id)),
-    success: true
-  }
-}
-
-
-export const generateGridFromMove = (grid: Grid, target: Coords, element: Element): { grid: Grid, success: true } | { errorCode: ErrorCode, grid: Grid, success: false } => {
-  const _target = JSON.stringify(target)
-
-  const targetIsValid = isValidMoveTarget(grid, target)
-  if (!targetIsValid.success) {
-    return {
-      errorCode: targetIsValid.errorCode,
-      grid,
-      success: false
-    }
-  }
-
-  const originEntry = Array.from(grid.entries()).find(([_, elementIds]) => elementIds.has(element.__id))
-
-  if (!originEntry) {
-    return {
-      errorCode: 'ELEMENT_NOT_ON_GRID',
-      grid,
-      success: false
-    }
-  }
-
-  const originElementIds = originEntry[1]
-  originElementIds.delete(element.__id)
-
-  return {
-    grid: grid
-      .set(originEntry[0], originElementIds)
-      .set(_target, targetIsValid.value.add(element.__id)),
-    success: true
-  }
-}
-
-const isValidMoveTarget = (grid: Grid, coords: Coords): { success: true, value: Set<string> } | { errorCode: ErrorCode, success: false } => {
-  const gridEntry = grid.get(JSON.stringify(coords))
-
-  if (!gridEntry) {
-    return {
-      errorCode: 'INVALID_GRID_COORDS',
-      success: false
-    }
-  }
-
-  return {
-    success: true,
-    value: new Set(gridEntry.values())
-  }
 }

@@ -1,17 +1,15 @@
 import { useContext, useState } from 'react'
 import { v4 as uuid } from 'uuid'
-import { CommandCentersContext } from '../../../context/CommandCentersContext'
-import { EngineersContext } from '../../../context/EngineersContext'
-import { Element } from '../../../types/common'
-import { Engineer } from '../../../types/units'
+import type { Element } from '../../../types/elements'
+import type { Engineer } from '../../../types/units'
+import { ElementsContext } from '../../../context/ElementsContext'
 
 type MoveToTaskButtonProps = {
   engineer: Engineer
 }
 
 export const MoveToTaskButton = ({ engineer }: MoveToTaskButtonProps) => {
-  const { updateEngineer } = useContext(EngineersContext)
-  const { commandCenters } = useContext(CommandCentersContext)
+  const { elements, updateElement } = useContext(ElementsContext)
 
   const [selectedElement, setSelectedElement] = useState<Element | undefined>(undefined)
 
@@ -30,7 +28,7 @@ export const MoveToTaskButton = ({ engineer }: MoveToTaskButtonProps) => {
       status: 'QUEUED'
     })
 
-    updateEngineer({
+    updateElement({
       ...engineer,
       taskQueue
     })
@@ -44,9 +42,9 @@ export const MoveToTaskButton = ({ engineer }: MoveToTaskButtonProps) => {
       >
         move to
       </button>
-      <select onChange={(e) => setSelectedElement(commandCenters.find(cc => cc.__id === e.target.value))}>
+      <select onChange={(e) => setSelectedElement(elements.get(e.target.value))}>
         <option>choose</option>
-        {commandCenters.map(cc => <option value={cc.__id}>{cc.name}</option>)}
+        {[...elements.values()].map(el => <option key={`moveTo-${engineer.__id}-${el.__id}`} value={el.__id}>{el.name}</option>)}
       </select>
     </>
   )

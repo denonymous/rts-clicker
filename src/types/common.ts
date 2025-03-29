@@ -1,4 +1,4 @@
-import { TaskKey, TaskQueue } from "./tasks"
+import type { Task, TaskKey } from './tasks'
 
 export type Coords = {
   x: number
@@ -15,7 +15,9 @@ export type Location = {
   direction: Direction
 }
 
-export type Element = {
+export type TaskQueue = readonly Task[]
+
+export type ElementPrototype = {
   __id: string
   location: Location
   name: string
@@ -24,8 +26,9 @@ export type Element = {
   taskQueue: TaskQueue
 }
 
-type SerializedCoords = string
-type ElementId = string
-export type Grid = Map<SerializedCoords, Set<ElementId>>
-
 export type ErrorCode = 'ELEMENT_NOT_ON_GRID' | 'INVALID_GRID_COORDS'
+
+export type Resources = {
+  crystals: number
+  gas: number
+}

@@ -1,12 +1,10 @@
-import { useContext } from 'react'
-import { CommandCentersContext } from '../context/CommandCentersContext'
-import { CommandCenter } from '../types/structures'
+import type { CommandCenter } from '../types/structures'
 import { COMMAND_CENTER_INIT_HP } from '../constants'
 import { TaskQueueComponent } from './TaskQueueComponent'
 import { CreateEngineerTaskButton } from './buttons/CommandCenter/CreateEngineerTaskButton'
 
-export const CommandCentersComponent = () => {
-  const { commandCenters } = useContext(CommandCentersContext)
+export const CommandCentersComponent = ({ commandCenters }: { commandCenters: readonly CommandCenter[] }) => {
+  // const { commandCenters } = useContext(CommandCentersContext)
 
   return (
     <section>
@@ -26,7 +24,7 @@ const CommandCenterComponent = ({ commandCenter }: CCProps) => {
 
   return (
     <article>
-      <strong>{commandCenter.name}</strong> ({commandCenter.hitPoints}/{COMMAND_CENTER_INIT_HP})<br />
+      <strong>{commandCenter.name}</strong> ({commandCenter.hitPoints}/{COMMAND_CENTER_INIT_HP}) [{commandCenter.location.coords.x},{commandCenter.location.coords.y}]<br />
       <AvailableTasksComponent commandCenter={commandCenter} />
       <TaskQueueComponent tasks={commandCenter.taskQueue} now={now} />
     </article>

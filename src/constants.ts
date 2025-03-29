@@ -1,5 +1,5 @@
-import { Direction } from "./types/common"
-import { TaskCost } from "./types/tasks"
+import type { Direction } from "./types/common"
+import type { Resources } from "./types/common"
 
 // general
 
@@ -35,7 +35,7 @@ export const UNIT_MAX_ATTACK_ACCURACY = 100 // pct
 
 // builder
 
-export const BUILDER_CREATE_COST: TaskCost = { crystals: 200, gas: 0 }
+export const BUILDER_CREATE_COST: Resources = { crystals: 200, gas: 0 }
 
 export const BUILDER_INIT_HP = 100
 
@@ -54,7 +54,7 @@ export const BUILDER_INIT_ATTACK_DAMAGE_RADIUS = 1 // TODO map grid spaces?
 
 // grunt
 
-export const GRUNT_CREATE_COST: TaskCost = { crystals: 300, gas: 0 }
+export const GRUNT_CREATE_COST: Resources = { crystals: 300, gas: 0 }
 
 export const GRUNT_INIT_HP = 200
 
@@ -68,7 +68,7 @@ export const GRUNT_INIT_ATTACK_DAMAGE_RADIUS = 1
 
 // soldier
 
-export const SOLDIER_CREATE_COST: TaskCost = { crystals: 400, gas: 0 }
+export const SOLDIER_CREATE_COST: Resources = { crystals: 400, gas: 0 }
 
 export const SOLDIER_INIT_HP = 300
 
@@ -82,7 +82,7 @@ export const SOLDIER_INIT_ATTACK_DAMAGE_RADIUS = 1
 
 // specialist
 
-export const SPECIALIST_CREATE_COST: TaskCost = { crystals: 550, gas: 100 }
+export const SPECIALIST_CREATE_COST: Resources = { crystals: 550, gas: 100 }
 
 export const SPECIALIST_INIT_HP = 300
 
@@ -96,6 +96,6 @@ export const SPECIALIST_INIT_ATTACK_DAMAGE_RADIUS = 3
 
 // structure
 
-export const COMMAND_CENTER_CREATE_COST: TaskCost = { crystals: 4_000, gas: 1_000 }
+export const COMMAND_CENTER_CREATE_COST: Resources = { crystals: 4_000, gas: 1_000 }
 
 export const COMMAND_CENTER_INIT_HP = 3_000
