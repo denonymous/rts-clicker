@@ -13,7 +13,7 @@ import {
   BUILDER_INIT_MOVEMENT_SPEED,
   BUILDER_INIT_REPAIR_SPEED
 } from '../constants'
-import { randomUnitName } from '../util/utils'
+import { randomUnitName } from '../names'
 
 type CreateEngineerProps = {
   location: Location
@@ -24,7 +24,9 @@ export const createEngineer = ({ location }: CreateEngineerProps): Engineer => {
 
   return {
     __id: id,
-    __type: 'engineer',
+    __elementType: 'UNIT',
+    __unitType: 'BUILDER',
+    __type: 'ENGINEER',
     __width: 1,
     __height: 1,
     location,

@@ -1,4 +1,5 @@
-import { BuildTask, Task, TaskQueue } from '../types/tasks'
+import type { TaskQueue } from '../types/common'
+import type { BuildTask, Task } from '../types/tasks'
 import { calculatePercentDone } from '../util/utils'
 
 type TaskQueueParams = {
@@ -22,7 +23,7 @@ type QueuedTaskParams = {
 export const QueuedTaskComponent = ({ task, now }: QueuedTaskParams) => {
   const statusBar =
     task.__type === 'BUILD' && task.status === 'IN PROGRESS'
-      ? generateTaskStatusBar(task as BuildTask, now)
+      ? generateTaskStatusBar(task, now)
       : <></>
 
   return (

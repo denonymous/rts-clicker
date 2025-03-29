@@ -1,34 +1,30 @@
-import { Element } from './common'
+import type { Element } from './elements'
+import type { Resources } from './common'
 
-export type TaskType = 'BUILD' | 'MOVE'
 export type TaskKey = 'CREATE_ENGINEER' | 'CREATE_COMMAND_CENTER' | 'MOVE TO'
 
 export type TaskStatus = 'QUEUED' | 'NOT ENOUGH RESOURCES' | 'IN PROGRESS' | 'COMPLETE'
 
-export type TaskCost = {
-  crystals: number
-  gas: number
-}
-
-export type Task = {
+type TaskPrototype = {
   __id: string
   __key: TaskKey
-  __type: TaskType
-  cost: TaskCost
+  cost: Resources
   description: string
   status: TaskStatus
   startedAt?: number
   finishedAt?: number
 }
 
-export type BuildTask = Task & {
+export type BuildTask = TaskPrototype & {
+  __type: 'BUILD'
   duration: number
   onComplete: () => void
 }
 
-export type MoveTask = Task & {
+export type MoveTask = TaskPrototype & {
+  __type: 'MOVE'
   target: Element
   onComplete: () => void
 }
 
-export type TaskQueue = readonly (BuildTask | MoveTask)[]
+export type Task = BuildTask | MoveTask

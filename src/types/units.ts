@@ -1,6 +1,7 @@
-import type { Element } from './common'
+import type { ElementPrototype } from './common'
 
-export type Unit = Element & {
+type UnitPrototype = ElementPrototype & {
+  __elementType: 'UNIT'
   name: string
   hitPoints: number
   movementSpeed: number
@@ -11,30 +12,41 @@ export type Unit = Element & {
   attackDamageRadius: number
 }
 
-type Builder = Unit & {
+type BuilderPrototype = UnitPrototype & {
+  __unitType: 'BUILDER'
   buildSpeed: number
   repairSpeed: number
   gatherSpeed: number
 }
-export type Engineer = Builder & {
-  __type: 'engineer'
+
+export type Engineer = BuilderPrototype & {
+  __type: 'ENGINEER'
   __width: 1
   __height: 1
 }
 
-type Fighter = Unit
-export type Grunt = Fighter & {
-  __type: 'grunt'
+type FighterPrototype = UnitPrototype & {
+  __unitType: 'FIGHTER'
+}
+
+export type Grunt = FighterPrototype & {
+  __type: 'GRUNT'
   __width: 1
   __height: 1
 }
-export type Soldier = Fighter & {
-  __type: 'soldier'
+
+export type Soldier = FighterPrototype & {
+  __type: 'SOLDIER'
   __width: 1
   __height: 1
 }
-export type Specialist = Fighter & {
-  __type: 'specialist'
+
+export type Specialist = FighterPrototype & {
+  __type: 'SPECIALIST'
   __width: 1
   __height: 1
 }
+
+export type Builder = Engineer
+export type Fighter = Grunt | Soldier | Specialist
+export type Unit = Builder | Fighter

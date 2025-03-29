@@ -1,4 +1,16 @@
-export const structures = [
+/**
+ * Return a random stucture-themed name from a list
+ */
+export const randomStructureName = () =>
+  structureNames[Math.floor(Math.random() * structureNames.length)]
+
+/**
+ * Return a random unit-themed name from a list
+ */
+export const randomUnitName = () =>
+  unitNames[Math.floor(Math.random() * unitNames.length)]
+
+const structureNames = [
   'Alpha',
   'Beta',
   'Bravo',
@@ -42,7 +54,7 @@ export const structures = [
   'Zulu'
 ]
 
-export const units = [
+const unitNames = [
   'Aaron',
   'Alex',
   'Amanda',

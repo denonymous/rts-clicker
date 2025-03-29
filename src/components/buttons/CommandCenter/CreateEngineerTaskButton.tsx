@@ -1,13 +1,12 @@
 import { useContext } from 'react'
 import { v4 as uuid } from 'uuid'
-import { CommandCentersContext } from '../../../context/CommandCentersContext'
-import { CommandCenter } from '../../../types/structures'
-import { EngineersContext } from '../../../context/EngineersContext'
+import type { CommandCenter } from '../../../types/structures'
 import { createEngineer } from '../../../tasks/engineer'
-import { BuildTask } from '../../../types/tasks'
+import type { BuildTask } from '../../../types/tasks'
 import { BUILDER_CREATE_COST } from '../../../constants'
 import { ResourcesContext } from '../../../context/ResourcesContext'
 import { canAfford } from '../../../util/utils'
+import { ElementsContext } from '../../../context/ElementsContext'
 
 type CreateEngineerTaskButtonProps = {
   commandCenter: CommandCenter
@@ -15,8 +14,7 @@ type CreateEngineerTaskButtonProps = {
 
 export const CreateEngineerTaskButton = ({ commandCenter }: CreateEngineerTaskButtonProps) => {
   const { crystals, gas } = useContext(ResourcesContext)
-  const { addEngineer } = useContext(EngineersContext)
-  const { updateCommandCenter } = useContext(CommandCentersContext)
+  const { addElement, updateElement } = useContext(ElementsContext)
 
   const enqueueCreateEngineer = (commandCenter: CommandCenter) => {
     const task: BuildTask = {
@@ -26,13 +24,13 @@ export const CreateEngineerTaskButton = ({ commandCenter }: CreateEngineerTaskBu
       cost: BUILDER_CREATE_COST,
       description: 'Train new Engineer',
       duration: 5,
-      onComplete: () => addEngineer(
+      onComplete: () => addElement(
         createEngineer({ location: commandCenter.location })
       ),
       status: 'QUEUED'
     }
 
-    updateCommandCenter({
+    updateElement({
       ...commandCenter,
       taskQueue: [
         ...commandCenter.taskQueue,

@@ -1,37 +1,32 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-import { CommandCenter } from './types/structures'
-import { Engineer, Unit } from './types/units'
 import { createCommandCenter } from './tasks/commandCenter'
-import { Coords, Element, Grid } from './types/common'
+import { Resources } from './types/common'
+import type { Element } from './types/elements'
 import {
   DIRECTION_SOUTH,
-  PLAYER_INIT_RESOURCE_CRYSTALS,
-  PLAYER_INIT_RESOURCE_GAS,
   PLAYER_MAX_RESOURCE_CRYSTALS,
   PLAYER_MAX_RESOURCE_GAS
 } from './constants'
 import { createEngineer } from './tasks/engineer'
-import { CommandCentersContext } from './context/CommandCentersContext'
-import { EngineersContext } from './context/EngineersContext'
 import { CommandCentersComponent } from './components/CommandCentersComponent'
 import { EngineersComponent } from './components/EngineersComponent'
-import { BuildTask, MoveTask, TaskCost, TaskQueue } from './types/tasks'
+import { BuildTask, MoveTask } from './types/tasks'
 import { ResourcesContext } from './context/ResourcesContext'
-import { calculateNextStep, canAfford, elementsAreInRange, findElementOnGrid, generateGridFromMove, markTaskBegun, markTaskCannotAfford, markTaskDone, placeElementOnGrid } from './util/utils'
-import { GridContext } from './context/GridContext'
+import {
+  calculateNextStep,
+  canAfford,
+  elementsAreInRange,
+  markTaskBegun,
+  markTaskCannotAfford,
+  markTaskDone
+} from './util/utils'
+import { ElementsContext } from './context/ElementsContext'
 
 function App() {
 
   const xRadius = 80
   const yRadius = 80
-
-  const [grid, setGrid] = useState<Grid>(new Map())
-
-  const gridContext = {
-    grid,
-    setGrid
-  }
 
   // resource state management
 
@@ -65,96 +60,63 @@ function App() {
     removeGas
   }
 
-  // structure state management
+  type UUID = string
 
-  const [commandCenters, setCommandCenters] = useState([] as readonly CommandCenter[])
+  const [elements, setElements] = useState<Map<UUID, Element>>(new Map())
 
-  const addCommandCenter = (commandCenter: CommandCenter) =>
-    setCommandCenters(curr => [...curr, commandCenter])
+  const addElement = (element: Element) => setElements(curr => new Map(curr.set(element.__id, element)))
+  const addElements = (elements: readonly Element[]) => setElements(curr => {
+    elements.forEach(e => curr.set(e.__id, e))
+    return new Map(curr)
+  })
 
-  const updateCommandCenter = (commandCenter: CommandCenter) =>
-    setCommandCenters(curr => [
-      ...curr.filter(cc => cc.__id !== commandCenter.__id),
-      commandCenter
-    ])
+  const updateElement = (element: Element) => setElements(curr => new Map(curr.set(element.__id, element)))
+  const updateElements = (elements: readonly Element[]) => setElements(curr => new Map(
+    elements.reduce((updatedMap, element) => {
+      const elementId = element.__id
+      return updatedMap.has(elementId) ? updatedMap.set(element.__id, element) : updatedMap
+    }, curr)
+  ))
 
-  const removeCommandCenter = (id: string) =>
-    setCommandCenters(curr => [...curr.filter(cc => cc.__id !== id)])
+  const removeElement = (elementId: UUID) => setElements(curr => {
+    curr.delete(elementId)
+    return new Map(curr)
+  })
+  const removeElements = (elementIds: readonly UUID[]) => setElements(curr => {
+    elementIds.forEach(e => curr.delete(e))
+    return new Map(curr)
+  })
 
-  const commandCentersContext = {
-    commandCenters,
-    addCommandCenter,
-    updateCommandCenter,
-    removeCommandCenter
+  const elementsContext = {
+    elements,
+    addElement,
+    addElements,
+    updateElement,
+    updateElements,
+    removeElement,
+    removeElements
   }
 
-  // unit state management
-
-  const [engineers, setEngineers] = useState([] as readonly Engineer[])
-
-  const addEngineer = (engineer: Engineer) =>
-    setEngineers(curr => [...curr, engineer])
-
-  const updateEngineer = (engineer: Engineer) =>
-    setEngineers(curr => [
-      ...curr.filter(e => e.__id !== engineer.__id),
-      engineer
-    ])
-
-  const removeEngineer = (id: string) =>
-    setEngineers(curr => [...curr.filter(e => e.__id !== id)])
-
-  const engineersContext = {
-    engineers,
-    addEngineer,
-    updateEngineer,
-    removeEngineer
-  }
-
-  // set initial game start state
+  // initial game setup
 
   useEffect(() => {
-    let grid = Array.from<number>({ length: (xRadius * 2) + 1 })
-      .reduce<Grid>((acc, _, xIdx) => {
-        Array.from<number>({ length: (yRadius * 2) + 1 })
-          .forEach((_, yIdx) =>
-            acc.set(
-              JSON.stringify({ x: xIdx - xRadius, y: yIdx - yRadius }),
-              new Set()
-            )
-          )
-
-        return acc
-      }, new Map())
-
-    setCrystals(PLAYER_INIT_RESOURCE_CRYSTALS)
-    setGas(PLAYER_INIT_RESOURCE_GAS)
-
-    // TODO this is gross, clean it up
+    setCrystals(1000)
+    setGas(1000)
 
     const initialCommandCenter = createCommandCenter({
       location: { coords: { x: 0, y: 0 }, direction: DIRECTION_SOUTH }
     })
-    setCommandCenters([initialCommandCenter])
-    const ccResults = placeElementOnGrid(grid, initialCommandCenter, { x: 0, y: 0 })
-    grid = ccResults.success ? ccResults.grid : grid
 
-    const e1 = createEngineer({
+    const engineer1 = createEngineer({
       location: { coords: { x: -10, y: -7 }, direction: DIRECTION_SOUTH }
     })
-    const e2 = createEngineer({
+
+    const engineer2 = createEngineer({
       location: { coords: { x: 8, y: -16 }, direction: DIRECTION_SOUTH }
     })
-    setEngineers([e1, e2])
-    const e1Results = placeElementOnGrid(grid, e1, { x: -10, y: -7 })
-    grid = e1Results.success ? e1Results.grid : grid
-    const e2Results = placeElementOnGrid(grid, e2, { x: 8, y: -16 })
-    grid = e2Results.success ? e2Results.grid : grid
 
-    setGrid(grid)
+    setElements([initialCommandCenter, engineer1, engineer2].reduce((acc, curr) => acc.set(curr.__id, curr), new Map()))
   }, [])
-
-  // tick & task queue processing
 
   const processBuildTask = (task: BuildTask, now: number): BuildTask => {
     if (task.startedAt && now >= (task.startedAt + (task.duration * 1000))) {
@@ -165,34 +127,35 @@ function App() {
     return task
   }
 
-  const processMoveTask = (grid: Grid, unit: Unit, task: MoveTask, now: number): { task: MoveTask, grid: Grid } => {
-    const unitGridEntry = findElementOnGrid(grid, unit)
-    const targetGridEntry = findElementOnGrid(grid, task.target)
+  const processMoveTask = (element: Element, task: MoveTask, now: number): { element: Element, task: MoveTask } => {
+    const elementLocation = element.location
+    const targetLocation = elements.get(task.target.__id)?.location
 
-    if (!unitGridEntry || !targetGridEntry) {
-      return { grid, task }
+    if (!elementLocation || !targetLocation) {
+      // TODO log error
+      return { element, task }
     }
 
-    const unitCoords: Coords = JSON.parse(unitGridEntry[0])
-    const targetCoords: Coords = JSON.parse(targetGridEntry[0])
-
-    if (elementsAreInRange(unitCoords, targetCoords)) {
+    if (elementsAreInRange(elementLocation.coords, targetLocation.coords)) {
       task.onComplete()
-      return { grid, task: markTaskDone(task, now) }
+      return { element, task: markTaskDone(task, now) }
     }
 
-    const nextStep = calculateNextStep(unitCoords, targetCoords)
-    const result = generateGridFromMove(grid, nextStep, unit)
+    const nextStep = calculateNextStep(elementLocation.coords, targetLocation.coords)
+    // TODO validate move
+    element.location.coords = nextStep
 
-    if (result.success) {
-      return { grid: result.grid, task }
-    } else {
-      return { grid, task }
-    }
+    return { element, task }
   }
 
-  const processTaskQueue = (grid: Grid, element: Element, currentResources: TaskCost): TaskQueue => {
-    const now = new Date().getTime()
+  /**
+   * Process an element's task queue for a tick
+   * 
+   * If it has no tasks in progress, try to start one.
+   * 
+   * Return element with updated data (task queue, location, etc)
+   */
+  const processTaskQueue = (element: Element, currentResources: Resources, now: number): Element => {
 
     const tasksInProgress = element.taskQueue.reduce((acc, curr) => curr.status === 'IN PROGRESS' ? acc + 1 : acc, 0)
 
@@ -204,12 +167,12 @@ function App() {
           removeCrystals(taskToStart.cost.crystals)
           removeGas(taskToStart.cost.gas)
 
-          return [
+          element.taskQueue = [
             ...element.taskQueue.filter(task => task.__id !== taskToStart.__id),
             markTaskBegun(taskToStart, now)
           ]
         } else {
-          return [
+          element.taskQueue = [
             ...element.taskQueue.filter(task => task.__id !== taskToStart.__id),
             markTaskCannotAfford(taskToStart)
           ]
@@ -217,73 +180,66 @@ function App() {
       }
     }
 
-    return element.taskQueue.map<BuildTask | MoveTask>(task => {
+    const updatedElement = element.taskQueue.reduce((updatedElement, task) => {
       if (task.status === 'IN PROGRESS') {
         if (task.__type === 'BUILD') {
-          return processBuildTask(task as BuildTask, now)
+          const updatedTask = processBuildTask(task, now)
+          return {
+            ...updatedElement,
+            taskQueue: [
+              ...updatedElement.taskQueue.filter(_task => _task.__id !== task.__id),
+              updatedTask
+            ]
+          }
         }
 
         if (task.__type === 'MOVE') {
-          const { grid: updatedGrid, task: updatedTask } = processMoveTask(grid, element as Unit, task as MoveTask, now)
-          setGrid(updatedGrid)
-          return updatedTask
+          const { element: processedElement, task: updatedTask } = processMoveTask(updatedElement, task, now)
+          return {
+            ...processedElement,
+            taskQueue: [
+              ...processedElement.taskQueue.filter(_task => _task.__id !== task.__id),
+              updatedTask
+            ]
+          }
         }
       }
 
-      return task
-    })
+      return updatedElement
+    }, { ...element })
+
+    return updatedElement
   }
 
-  type ProcessTickInput = {
-    grid: Grid
-    commandCenters: readonly CommandCenter[]
-    engineers: readonly Engineer[]
-  }
+  const processTick = (elements: readonly Element[]) => {
+    const now = new Date().getTime()
 
-  const processTick = ({ grid, commandCenters, engineers }: ProcessTickInput) => {
-    // check task lists and progress each one
-
-    commandCenters.forEach(commandCenter =>
-      updateCommandCenter({
-        ...commandCenter,
-        taskQueue: processTaskQueue(grid, commandCenter, { crystals, gas })
-      })
-    )
-
-    engineers.forEach(engineer =>
-      updateEngineer({
-        ...engineer,
-        taskQueue: processTaskQueue(grid, engineer, { crystals, gas })
-      })
-    )
+    const updatedElements = elements.map(e => processTaskQueue(e, { crystals, gas }, now))
+    updateElements(updatedElements)
   }
 
   // main tick loop
 
   useEffect(() => {
     const tick = setInterval(() => {
-      processTick({ grid, commandCenters, engineers })
+      processTick([...elements.values()])
     }, 1000)
     return () => clearInterval(tick)
-  }, [grid, commandCenters, engineers])
+  }, [elements])
 
   // game board layout
 
   return (
-    <GridContext.Provider value={gridContext}>
-      <ResourcesContext.Provider value={resourcesContext}>
-        <CommandCentersContext.Provider value={commandCentersContext}>
-          <EngineersContext.Provider value={engineersContext}>
-            <h2>Resources</h2>
-            Crystals: {crystals}/{PLAYER_MAX_RESOURCE_CRYSTALS}, Gas: {gas}/{PLAYER_MAX_RESOURCE_GAS}
-            <h2>Structures</h2>
-            <CommandCentersComponent />
-            <h2>Units</h2>
-            <EngineersComponent />
-          </EngineersContext.Provider>
-        </CommandCentersContext.Provider>
-      </ResourcesContext.Provider>
-    </GridContext.Provider>
+    <ResourcesContext.Provider value={resourcesContext}>
+      <ElementsContext.Provider value={elementsContext}>
+        <h2>Resources</h2>
+        Crystals: {crystals}/{PLAYER_MAX_RESOURCE_CRYSTALS}, Gas: {gas}/{PLAYER_MAX_RESOURCE_GAS}
+        <h2>Structures</h2>
+        <CommandCentersComponent commandCenters={[...elements.values()].filter(e => e.__type === 'COMMAND CENTER')} />
+        <h2>Units</h2>
+        <EngineersComponent engineers={[...elements.values()].filter(e => e.__type === 'ENGINEER')} />
+      </ElementsContext.Provider>
+    </ResourcesContext.Provider>
   )
 }
 
