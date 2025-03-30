@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { v4 as uuid } from 'uuid'
 import type { CommandCenter } from '../../../types/structures'
-import { createEngineer } from '../../../tasks/engineer'
+import { createEngineer } from '../../../game/engineer'
 import type { BuildTask } from '../../../types/tasks'
 import { BUILDER_CREATE_COST } from '../../../constants'
 import { ResourcesContext } from '../../../context/ResourcesContext'
