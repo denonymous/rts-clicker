@@ -7,6 +7,7 @@ import { ResourcesContext } from '../../../context/ResourcesContext'
 import { COMMAND_CENTER_CREATE_COST } from '../../../constants'
 import { canAfford } from '../../../util/utils'
 import { ElementsContext } from '../../../context/ElementsContext'
+import { LogContext } from '../../../context/LogContext'
 
 type CreateCommandCenterTaskButtonProps = {
   engineer: Engineer
@@ -15,6 +16,7 @@ type CreateCommandCenterTaskButtonProps = {
 export const CreateCommandCenterTaskButton = ({ engineer }: CreateCommandCenterTaskButtonProps) => {
   const { crystals, gas } = useContext(ResourcesContext)
   const { addElement, updateElement } = useContext(ElementsContext)
+  const { logInfo } = useContext(LogContext)
 
   const enqueueCreateCommandCenter = (engineer: Engineer) => {
     const task: BuildTask = {
@@ -24,9 +26,11 @@ export const CreateCommandCenterTaskButton = ({ engineer }: CreateCommandCenterT
       cost: COMMAND_CENTER_CREATE_COST,
       description: 'Build new Command Center',
       duration: 30,
-      onComplete: () => addElement(
-        createCommandCenter({ location: engineer.location })
-      ),
+      onComplete: () => {
+        const cc = createCommandCenter({ location: engineer.location })
+        addElement(cc)
+        logInfo(cc)(`Built and ready for action`)
+      },
       status: 'QUEUED'
     }
 
