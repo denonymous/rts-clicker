@@ -1,5 +1,7 @@
 import type { Task, TaskKey } from './tasks'
 
+export type UUID = string
+
 export type Coords = {
   x: number
   y: number

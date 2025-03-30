@@ -10,7 +10,7 @@ type TaskQueueParams = {
 export const TaskQueueComponent = ({ tasks, now }: TaskQueueParams) => {
   return (
     <section>
-      Tasks: {tasks.length ? tasks.map(task => <QueuedTaskComponent task={task} now={now} />) : 'none'}
+      Tasks: {tasks.length ? tasks.map(task => <QueuedTaskComponent key={`QueuedTask-${task.__id}`} task={task} now={now} />) : 'none'}
     </section>
   )
 }

@@ -1,5 +1,4 @@
-import type { Element } from './elements'
-import type { Resources } from './common'
+import type { Coords, Resources } from './common'
 
 export type TaskKey = 'CREATE_ENGINEER' | 'CREATE_COMMAND_CENTER' | 'MOVE TO'
 
@@ -23,7 +22,7 @@ export type BuildTask = TaskPrototype & {
 
 export type MoveTask = TaskPrototype & {
   __type: 'MOVE'
-  target: Element
+  target: Coords
   onComplete: () => void
 }
 

@@ -24,7 +24,7 @@ export const MoveToTaskButton = ({ engineer }: MoveToTaskButtonProps) => {
       cost: { crystals: 0, gas: 0 },
       description: `Move to ${selectedElement.name}`,
       onComplete: () => { },
-      target: selectedElement,
+      target: selectedElement.location.coords,
       status: 'QUEUED'
     })
 
@@ -32,7 +32,21 @@ export const MoveToTaskButton = ({ engineer }: MoveToTaskButtonProps) => {
       ...engineer,
       taskQueue
     })
+
+    setSelectedElement(undefined)
   }
+
+  const moveToOptions = [...elements.values()]
+    .filter(e => e.__id !== engineer.__id)
+    .map(el => (
+      <option
+        key={`moveTo-${engineer.__id}-${el.__id}`}
+        selected={selectedElement?.__id === el.__id}
+        value={el.__id}
+      >
+        {el.name}
+      </option>
+    ))
 
   return (
     <>
@@ -44,7 +58,7 @@ export const MoveToTaskButton = ({ engineer }: MoveToTaskButtonProps) => {
       </button>
       <select onChange={(e) => setSelectedElement(elements.get(e.target.value))}>
         <option>choose</option>
-        {[...elements.values()].map(el => <option key={`moveTo-${engineer.__id}-${el.__id}`} value={el.__id}>{el.name}</option>)}
+        {moveToOptions}
       </select>
     </>
   )
