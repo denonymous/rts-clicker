@@ -34,3 +34,13 @@ export type Resources = {
   crystals: number
   gas: number
 }
+
+type LogLevel = 'INFO' | 'ALERT'
+
+export type LogEntry = {
+  __id: UUID
+  level: LogLevel
+  timestamp: number
+  writtenBy: UUID
+  message: string
+}

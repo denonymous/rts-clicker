@@ -3,6 +3,7 @@ import { v4 as uuid } from 'uuid'
 import type { Element } from '../../../types/elements'
 import type { Engineer } from '../../../types/units'
 import { ElementsContext } from '../../../context/ElementsContext'
+import { LogContext } from '../../../context/LogContext'
 
 type MoveToTaskButtonProps = {
   engineer: Engineer
@@ -10,6 +11,7 @@ type MoveToTaskButtonProps = {
 
 export const MoveToTaskButton = ({ engineer }: MoveToTaskButtonProps) => {
   const { elements, updateElement } = useContext(ElementsContext)
+  const { logInfo } = useContext(LogContext)
 
   const [selectedElement, setSelectedElement] = useState<Element | undefined>(undefined)
 
@@ -23,7 +25,7 @@ export const MoveToTaskButton = ({ engineer }: MoveToTaskButtonProps) => {
       __key: 'MOVE TO',
       cost: { crystals: 0, gas: 0 },
       description: `Move to ${selectedElement.name}`,
-      onComplete: () => { },
+      onComplete: () => logInfo(engineer)(`Arrived at ${selectedElement.name}`),
       target: selectedElement.location.coords,
       status: 'QUEUED'
     })
