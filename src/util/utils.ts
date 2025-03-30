@@ -1,6 +1,18 @@
 import type { Coords, Resources } from '../types/common'
 import type { Task } from '../types/tasks'
 
+export const getTaskStatus = (task: Task): string => {
+  if (task.__type === 'BUILD' && task.__key === 'CREATE_COMMAND_CENTER') {
+    return 'Building new Command Center'
+  } else if (task.__type === 'BUILD' && task.__key === 'CREATE_ENGINEER') {
+    return 'Training new Engineer'
+  } else if (task.__type === 'MOVE') {
+    return `In transit to [${task.target.x},${task.target.y}]`
+  }
+
+  return '???'
+}
+
 /**
  * Take a timestamp of start, duration in seconds, and watermark timestamp for comparison
  * Return percentage complete of task

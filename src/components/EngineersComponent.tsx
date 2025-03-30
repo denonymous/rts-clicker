@@ -22,6 +22,7 @@ const EngineerComponent = ({ engineer }: EngProps) => {
   return (
     <article>
       <strong>{engineer.name}</strong> ({engineer.hitPoints}/{BUILDER_INIT_HP}) [{engineer.location.coords.x},{engineer.location.coords.y}]<br />
+      Status: {engineer.status}<br />
       <AvailableTasksComponent engineer={engineer} />
       <TaskQueueComponent tasks={engineer.taskQueue} now={now} />
     </article>

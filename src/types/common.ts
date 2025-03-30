@@ -22,6 +22,7 @@ export type TaskQueue = readonly Task[]
 export type ElementPrototype = {
   __id: string
   location: Location
+  status: 'Idle' | string
   name: string
   hitPoints: number
   availableTasks: readonly TaskKey[]

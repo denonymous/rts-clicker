@@ -5,6 +5,7 @@ import {
   calculateNextStep,
   canAfford,
   elementsAreInRange,
+  getTaskStatus,
   markTaskBegun,
   markTaskCannotAfford,
   markTaskDone
@@ -89,12 +90,14 @@ const processElementTaskQueue = ({
           ...element.taskQueue.filter(task => task.__id !== taskToStart.__id),
           markTaskBegun(taskToStart, now)
         ]
+        element.status = getTaskStatus(taskToStart)
         logInfo(`Starting task - ${taskToStart.description}`)
       } else {
         element.taskQueue = [
           ...element.taskQueue.filter(task => task.__id !== taskToStart.__id),
           markTaskCannotAfford(taskToStart)
         ]
+        element.status = 'Idle'
         logAlert(`Could not afford to start task - ${taskToStart.description}`)
       }
     }
@@ -103,22 +106,22 @@ const processElementTaskQueue = ({
   const updatedElement = element.taskQueue.reduce((updatingElement, task) => {
     if (task.status === 'IN PROGRESS') {
       if (task.__type === 'BUILD') {
-        const updatedTask = processBuildTask({ logInfo, element: updatingElement, task, now })
+        const { updatedElement, updatedTask } = processBuildTask({ logInfo, element: updatingElement, task, now })
         return {
-          ...updatingElement,
+          ...updatedElement,
           taskQueue: [
-            ...updatingElement.taskQueue.filter(_task => _task.__id !== task.__id),
+            ...updatedElement.taskQueue.filter(_task => _task.__id !== task.__id),
             updatedTask
           ]
         }
       }
 
       if (task.__type === 'MOVE') {
-        const { updatedElement: movedElement, updatedTask } = processMoveTask({ logInfo, logAlert, element: updatingElement, task, now })
+        const { updatedElement, updatedTask } = processMoveTask({ logInfo, logAlert, element: updatingElement, task, now })
         return {
-          ...movedElement,
+          ...updatedElement,
           taskQueue: [
-            ...movedElement.taskQueue.filter(_task => _task.__id !== task.__id),
+            ...updatedElement.taskQueue.filter(_task => _task.__id !== task.__id),
             updatedTask
           ]
         }
@@ -138,14 +141,28 @@ type ProcessBuildTaskParams = {
   now: number
 }
 
-const processBuildTask = ({ logInfo, task, now }: ProcessBuildTaskParams): BuildTask => {
+type ProcessBuildTaskReturn = {
+  updatedElement: Element
+  updatedTask: BuildTask
+}
+
+const processBuildTask = ({ element, logInfo, task, now }: ProcessBuildTaskParams): ProcessBuildTaskReturn => {
   if (task.startedAt && now >= (task.startedAt + (task.duration * 1000))) {
     task.onComplete()
     logInfo(`Finished task - ${task.description}`)
-    return markTaskDone(task, now)
+    return {
+      updatedElement: {
+        ...element,
+        status: 'Idle'
+      },
+      updatedTask: markTaskDone(task, now)
+    }
   }
 
-  return task
+  return {
+    updatedElement: element,
+    updatedTask: task
+  }
 }
 
 type ProcessMoveTaskParams = {
@@ -168,16 +185,28 @@ const processMoveTask = ({ logInfo, logAlert, element, task, now }: ProcessMoveT
   if (!elementLocation) {
     logAlert(`Cannot continue task - ${task.description} - I don't know where I am`)
     return {
-      updatedElement: element,
-      updatedTask: task
+      updatedElement: {
+        ...element,
+        status: 'MIA'
+      },
+      updatedTask: {
+        ...task,
+        status: 'CANCELED'
+      }
     }
   }
 
   if (!targetLocation) {
-    logAlert(`Cannot continue task - ${task.description} - I cannot find it`)
+    logAlert(`Cannot perform task - ${task.description} - I cannot find it`)
     return {
-      updatedElement: element,
-      updatedTask: task
+      updatedElement: {
+        ...element,
+        status: 'Confused'
+      },
+      updatedTask: {
+        ...task,
+        status: 'CANCELED'
+      }
     }
   }
 
@@ -185,7 +214,10 @@ const processMoveTask = ({ logInfo, logAlert, element, task, now }: ProcessMoveT
     task.onComplete()
     logInfo(`Finished task - ${task.description}`)
     return {
-      updatedElement: element,
+      updatedElement: {
+        ...element,
+        status: 'Idle'
+      },
       updatedTask: markTaskDone(task, now)
     }
   }
@@ -199,7 +231,8 @@ const processMoveTask = ({ logInfo, logAlert, element, task, now }: ProcessMoveT
       location: {
         ...element.location,
         coords: nextStep
-      }
+      },
+      status: getTaskStatus(task)
     },
     updatedTask: task
   }
