@@ -20,6 +20,10 @@ export const DIRECTION_WEST: Direction = {
   offset: { x: -1, y: 0 }
 }
 
+export const CRYSTAL_PATCH_INIT_CRYSTALS = 40_000
+export const GAS_VENT_INIT_GAS = 40_000
+export const RESOURCE_INIT_HP = 100_000
+
 // player
 
 export const PLAYER_MAX_RESOURCE_CRYSTALS = 20_000

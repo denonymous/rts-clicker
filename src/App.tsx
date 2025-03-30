@@ -1,14 +1,8 @@
 import { useEffect, useState } from 'react'
 import { v4 as uuid } from 'uuid'
 import './App.css'
-import { createCommandCenter } from './tasks/commandCenter'
 import type { Element } from './types/elements'
-import {
-  DIRECTION_SOUTH,
-  PLAYER_MAX_RESOURCE_CRYSTALS,
-  PLAYER_MAX_RESOURCE_GAS
-} from './constants'
-import { createEngineer } from './tasks/engineer'
+import { PLAYER_MAX_RESOURCE_CRYSTALS, PLAYER_MAX_RESOURCE_GAS } from './constants'
 import { CommandCentersComponent } from './components/CommandCentersComponent'
 import { EngineersComponent } from './components/EngineersComponent'
 import { ResourcesContext } from './context/ResourcesContext'
@@ -17,6 +11,8 @@ import { processTick } from './game/processTick'
 import type { LogEntry, UUID } from './types/common'
 import { LogContext } from './context/LogContext'
 import { LogComponent } from './components/LogComponent'
+import { initGame } from './game/init'
+import { ResourcesComponent } from './components/ResourcesComponent'
 
 function App() {
 
@@ -75,6 +71,8 @@ function App() {
     removeGas
   }
 
+  // element state management
+
   const [elements, setElements] = useState<Map<UUID, Element>>(new Map())
 
   const addElement = (element: Element) => setElements(curr => new Map(curr.set(element.__id, element)))
@@ -112,30 +110,7 @@ function App() {
 
   // initial game setup
 
-  useEffect(() => {
-    setCrystals(1000)
-    setGas(1000)
-
-    const initialCommandCenter = createCommandCenter({
-      location: { coords: { x: 0, y: 0 }, direction: DIRECTION_SOUTH }
-    })
-
-    const engineer1 = createEngineer({
-      location: { coords: { x: -10, y: -7 }, direction: DIRECTION_SOUTH }
-    })
-
-    const engineer2 = createEngineer({
-      location: { coords: { x: 8, y: -16 }, direction: DIRECTION_SOUTH }
-    })
-
-    setElements(
-      [
-        initialCommandCenter,
-        engineer1,
-        engineer2
-      ].reduce((acc, curr) => acc.set(curr.__id, curr), new Map())
-    )
-  }, [])
+  useEffect(() => initGame({ setCrystals, setGas, setElements }), [])
 
   // main tick loop
 
@@ -166,6 +141,8 @@ function App() {
           <CommandCentersComponent commandCenters={[...elements.values()].filter(e => e.__type === 'COMMAND CENTER')} />
           <h2>Units</h2>
           <EngineersComponent engineers={[...elements.values()].filter(e => e.__type === 'ENGINEER')} />
+          <h2>Resources</h2>
+          <ResourcesComponent resources={[...elements.values()].filter(e => e.__elementType === 'RESOURCE')} />
           <h2>Log</h2>
           <LogComponent />
         </ElementsContext.Provider>
