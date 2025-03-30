@@ -4,8 +4,6 @@ import { TaskQueueComponent } from './TaskQueueComponent'
 import { CreateEngineerTaskButton } from './buttons/CommandCenter/CreateEngineerTaskButton'
 
 export const CommandCentersComponent = ({ commandCenters }: { commandCenters: readonly CommandCenter[] }) => {
-  // const { commandCenters } = useContext(CommandCentersContext)
-
   return (
     <section>
       {
