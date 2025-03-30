@@ -7,6 +7,7 @@ import { BUILDER_CREATE_COST } from '../../../constants'
 import { ResourcesContext } from '../../../context/ResourcesContext'
 import { canAfford } from '../../../util/utils'
 import { ElementsContext } from '../../../context/ElementsContext'
+import { LogContext } from '../../../context/LogContext'
 
 type CreateEngineerTaskButtonProps = {
   commandCenter: CommandCenter
@@ -15,6 +16,7 @@ type CreateEngineerTaskButtonProps = {
 export const CreateEngineerTaskButton = ({ commandCenter }: CreateEngineerTaskButtonProps) => {
   const { crystals, gas } = useContext(ResourcesContext)
   const { addElement, updateElement } = useContext(ElementsContext)
+  const { logInfo } = useContext(LogContext)
 
   const enqueueCreateEngineer = (commandCenter: CommandCenter) => {
     const task: BuildTask = {
@@ -24,9 +26,11 @@ export const CreateEngineerTaskButton = ({ commandCenter }: CreateEngineerTaskBu
       cost: BUILDER_CREATE_COST,
       description: 'Train new Engineer',
       duration: 5,
-      onComplete: () => addElement(
-        createEngineer({ location: commandCenter.location })
-      ),
+      onComplete: () => {
+        const eng = createEngineer({ location: commandCenter.location })
+        addElement(eng)
+        logInfo(eng)(`Reporting for duty`)
+      },
       status: 'QUEUED'
     }
 

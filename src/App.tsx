@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { v4 as uuid } from 'uuid'
 import './App.css'
 import { createCommandCenter } from './tasks/commandCenter'
 import type { Element } from './types/elements'
@@ -13,9 +14,34 @@ import { EngineersComponent } from './components/EngineersComponent'
 import { ResourcesContext } from './context/ResourcesContext'
 import { ElementsContext } from './context/ElementsContext'
 import { processTick } from './game/processTick'
-import type { UUID } from './types/common'
+import type { LogEntry, UUID } from './types/common'
+import { LogContext } from './context/LogContext'
+import { LogComponent } from './components/LogComponent'
 
 function App() {
+
+  // log state management
+
+  const [log, setLog] = useState<readonly LogEntry[]>([])
+
+  const logMessage = (level: LogEntry['level'], element: Element, message: string) => setLog(curr => [
+    ...curr,
+    {
+      __id: uuid(),
+      level,
+      timestamp: new Date().getTime(),
+      writtenBy: element.__id,
+      message: `${element.name}: ${message}`
+    }
+  ])
+  const logInfo = (element: Element) => (message: string) => logMessage('INFO', element, message)
+  const logAlert = (element: Element) => (message: string) => logMessage('ALERT', element, message)
+
+  const logContext = {
+    log,
+    logInfo,
+    logAlert
+  }
 
   // resource state management
 
@@ -119,6 +145,8 @@ function App() {
         currentResources: { crystals, gas },
         removeCrystals,
         removeGas,
+        logInfo,
+        logAlert,
         elements: [...elements.values()],
         updateElements
       })
@@ -130,14 +158,18 @@ function App() {
 
   return (
     <ResourcesContext.Provider value={resourcesContext}>
-      <ElementsContext.Provider value={elementsContext}>
-        <h2>Resources</h2>
-        Crystals: {crystals}/{PLAYER_MAX_RESOURCE_CRYSTALS}, Gas: {gas}/{PLAYER_MAX_RESOURCE_GAS}
-        <h2>Structures</h2>
-        <CommandCentersComponent commandCenters={[...elements.values()].filter(e => e.__type === 'COMMAND CENTER')} />
-        <h2>Units</h2>
-        <EngineersComponent engineers={[...elements.values()].filter(e => e.__type === 'ENGINEER')} />
-      </ElementsContext.Provider>
+      <LogContext.Provider value={logContext}>
+        <ElementsContext.Provider value={elementsContext}>
+          <h2>Resources</h2>
+          Crystals: {crystals}/{PLAYER_MAX_RESOURCE_CRYSTALS}, Gas: {gas}/{PLAYER_MAX_RESOURCE_GAS}
+          <h2>Structures</h2>
+          <CommandCentersComponent commandCenters={[...elements.values()].filter(e => e.__type === 'COMMAND CENTER')} />
+          <h2>Units</h2>
+          <EngineersComponent engineers={[...elements.values()].filter(e => e.__type === 'ENGINEER')} />
+          <h2>Log</h2>
+          <LogComponent />
+        </ElementsContext.Provider>
+      </LogContext.Provider>
     </ResourcesContext.Provider>
   )
 }
