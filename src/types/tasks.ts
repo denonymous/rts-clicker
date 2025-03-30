@@ -2,7 +2,7 @@ import type { Coords, Resources } from './common'
 
 export type TaskKey = 'CREATE_ENGINEER' | 'CREATE_COMMAND_CENTER' | 'MOVE TO'
 
-export type TaskStatus = 'QUEUED' | 'NOT ENOUGH RESOURCES' | 'IN PROGRESS' | 'COMPLETE'
+export type TaskStatus = 'QUEUED' | 'NOT ENOUGH RESOURCES' | 'IN PROGRESS' | 'COMPLETE' | 'CANCELED'
 
 type TaskPrototype = {
   __id: string

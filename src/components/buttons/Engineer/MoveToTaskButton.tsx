@@ -4,6 +4,7 @@ import type { Element } from '../../../types/elements'
 import type { Engineer } from '../../../types/units'
 import { ElementsContext } from '../../../context/ElementsContext'
 import { LogContext } from '../../../context/LogContext'
+import { elementsAreInRange } from '../../../util/utils'
 
 type MoveToTaskButtonProps = {
   engineer: Engineer
@@ -40,6 +41,7 @@ export const MoveToTaskButton = ({ engineer }: MoveToTaskButtonProps) => {
 
   const moveToOptions = [...elements.values()]
     .filter(e => e.__id !== engineer.__id)
+    .filter(e => !elementsAreInRange(engineer.location.coords, e.location.coords))
     .map(el => (
       <option
         key={`moveTo-${engineer.__id}-${el.__id}`}

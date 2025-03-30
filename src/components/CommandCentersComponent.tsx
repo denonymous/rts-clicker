@@ -25,6 +25,7 @@ const CommandCenterComponent = ({ commandCenter }: CCProps) => {
   return (
     <article>
       <strong>{commandCenter.name}</strong> ({commandCenter.hitPoints}/{COMMAND_CENTER_INIT_HP}) [{commandCenter.location.coords.x},{commandCenter.location.coords.y}]<br />
+      Status: {commandCenter.status}<br />
       <AvailableTasksComponent commandCenter={commandCenter} />
       <TaskQueueComponent tasks={commandCenter.taskQueue} now={now} />
     </article>
