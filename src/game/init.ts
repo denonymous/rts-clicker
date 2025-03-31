@@ -28,7 +28,7 @@ export const initGame = ({ setCrystals, setGas, setElements }: InitGameProps) =>
   })
 
   const crystalPatch1 = createCrystalPatch({
-    location: { coords: { x: 20, y: 14 }, direction: DIRECTION_SOUTH },
+    location: { coords: { x: 10, y: 6 }, direction: DIRECTION_SOUTH },
     width: 4,
     height: 1
   })

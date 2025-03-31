@@ -48,6 +48,9 @@ export const BUILDER_INIT_BUILD_SPEED = 5 // structure HP
 export const BUILDER_INIT_REPAIR_SPEED = 7 // structure HP
 export const BUILDER_INIT_GATHER_SPEED = 5 // TODO what are these units?
 
+export const BUILDER_GATHER_CRYSTALS_AMT = 20
+export const BUILDER_GATHER_GAS_AMT = 20
+
 export const BUILDER_INIT_AGGRO_RANGE = 0
 export const BUILDER_INIT_ATTACK_ACCURACY = 10 // 1-100 ie hit chance
 export const BUILDER_INIT_ATTACK_RANGE = 1 // TODO map grid spaces?

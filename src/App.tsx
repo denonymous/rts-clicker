@@ -118,7 +118,9 @@ function App() {
     const tick = setInterval(() => {
       processTick({
         currentResources: { crystals, gas },
+        addCrystals,
         removeCrystals,
+        addGas,
         removeGas,
         logInfo,
         logAlert,
