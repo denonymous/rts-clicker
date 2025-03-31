@@ -2,6 +2,7 @@ import { BUILDER_INIT_HP } from '../constants'
 import type { Engineer } from '../types/units'
 import { TaskQueueComponent } from './TaskQueueComponent'
 import { CreateCommandCenterTaskButton } from './buttons/Engineer/CreateCommandCenterTaskButton'
+import { GatherResourceTaskButton } from './buttons/Engineer/GatherResourceTaskButton'
 import { MoveToTaskButton } from './buttons/Engineer/MoveToTaskButton'
 
 export const EngineersComponent = ({ engineers }: { engineers: readonly Engineer[] }) => {
@@ -37,7 +38,9 @@ const AvailableTasksComponent = ({ engineer }: EngProps) =>
           ? <CreateCommandCenterTaskButton key={`${engineer.__id}-createCommandCenterButton`} engineer={engineer} />
           : taskKey === 'MOVE TO'
             ? <MoveToTaskButton key={`${engineer.__id}-moveToButton`} engineer={engineer} />
-            : <></>
+            : taskKey === 'GATHER RESOURCE'
+              ? <GatherResourceTaskButton key={`${engineer.__id}-gatherResourceButton`} engineer={engineer} />
+              : <></>
       )
     }
   </section>

@@ -1,15 +1,17 @@
 import type { Resources } from '../types/common'
 import type { Element } from '../types/elements'
-import type { BuildTask, MoveTask } from '../types/tasks'
+import { Resource } from '../types/resources'
+import { CommandCenter } from '../types/structures'
+import type { Task } from '../types/tasks'
 import {
-  calculateNextStep,
   canAfford,
-  elementsAreInRange,
   getTaskStatus,
   markTaskBegun,
-  markTaskCannotAfford,
-  markTaskDone
+  markTaskCannotAfford
 } from '../util/utils'
+import { processBuildTask } from './processBuildTask'
+import { processGatherTask } from './processGatherTask'
+import { processMoveTask } from './processMoveTask'
 
 type ProcessTaskQueueParams = {
   currentResources: Resources
@@ -20,13 +22,17 @@ type ProcessTaskQueueParams = {
 type ProcessTickParams = ProcessTaskQueueParams & {
   logInfo: (element: Element) => (message: string) => void
   logAlert: (element: Element) => (message: string) => void
+  addCrystals: (val: number) => void
+  addGas: (val: number) => void
   elements: readonly Element[]
   updateElements: (_: readonly Element[]) => void
 }
 
 export const processTick = ({
   currentResources,
+  addCrystals,
   removeCrystals,
+  addGas,
   removeGas,
   logInfo,
   logAlert,
@@ -38,23 +44,33 @@ export const processTick = ({
   const params = {
     currentResources,
     removeCrystals,
-    removeGas
+    removeGas,
+    addCrystals,
+    addGas,
+    commandCenters: elements.filter(e => e.__type === 'COMMAND CENTER'),
+    resources: elements.filter(e => e.__elementType === 'RESOURCE'),
+    now
   }
+
   const updatedElements = elements.map(e =>
     processElementTaskQueue({
       ...params,
       logInfo: logInfo(e),
       logAlert: logAlert(e),
-      element: e,
-      now
+      element: e
     })
-  )
+  ).flat()
+
   updateElements(updatedElements)
 }
 
 type ProcessElementTaskQueueParams = ProcessTaskQueueParams & {
   logInfo: (message: string) => void
   logAlert: (message: string) => void
+  addCrystals: (val: number) => void
+  addGas: (val: number) => void
+  commandCenters: readonly CommandCenter[]
+  resources: readonly Resource[]
   element: Element
   now: number
 }
@@ -68,13 +84,17 @@ type ProcessElementTaskQueueParams = ProcessTaskQueueParams & {
  */
 const processElementTaskQueue = ({
   currentResources,
+  addCrystals,
   removeCrystals,
+  addGas,
   removeGas,
   logInfo,
   logAlert,
+  commandCenters,
+  resources,
   element,
   now
-}: ProcessElementTaskQueueParams): Element => {
+}: ProcessElementTaskQueueParams): readonly Element[] => {
 
   const tasksInProgress = element.taskQueue.reduce((acc, curr) => curr.status === 'IN PROGRESS' ? acc + 1 : acc, 0)
 
@@ -86,6 +106,7 @@ const processElementTaskQueue = ({
         removeCrystals(taskToStart.cost.crystals)
         removeGas(taskToStart.cost.gas)
 
+        // TODO don't love directly updating the task element here
         element.taskQueue = [
           ...element.taskQueue.filter(task => task.__id !== taskToStart.__id),
           markTaskBegun(taskToStart, now)
@@ -93,6 +114,7 @@ const processElementTaskQueue = ({
         element.status = getTaskStatus(taskToStart)
         logInfo(`Starting task - ${taskToStart.description}`)
       } else {
+        // TODO or here
         element.taskQueue = [
           ...element.taskQueue.filter(task => task.__id !== taskToStart.__id),
           markTaskCannotAfford(taskToStart)
@@ -103,137 +125,91 @@ const processElementTaskQueue = ({
     }
   }
 
-  const updatedElement = element.taskQueue.reduce((updatingElement, task) => {
+  return element.taskQueue.reduce((updatedElements, task) => {
     if (task.status === 'IN PROGRESS') {
       if (task.__type === 'BUILD') {
-        const { updatedElement, updatedTask } = processBuildTask({ logInfo, element: updatingElement, task, now })
-        return {
-          ...updatedElement,
-          taskQueue: [
-            ...updatedElement.taskQueue.filter(_task => _task.__id !== task.__id),
-            updatedTask
-          ]
-        }
-      }
+        const { updatedElement, updatedTask } = processBuildTask({ logInfo, element, task, now })
+        const elementChanges = parseTaskQueueResults({ element, updatedElement, updatedTask })
 
-      if (task.__type === 'MOVE') {
-        const { updatedElement, updatedTask } = processMoveTask({ logInfo, logAlert, element: updatingElement, task, now })
-        return {
-          ...updatedElement,
-          taskQueue: [
-            ...updatedElement.taskQueue.filter(_task => _task.__id !== task.__id),
-            updatedTask
-          ]
-        }
+        return elementChanges
+          ? [...updatedElements, ...elementChanges]
+          : updatedElements
+      }
+      else if (task.__type === 'MOVE') {
+        const { updatedElement, updatedTask } = processMoveTask({ logInfo, logAlert, element: element, task, now })
+        const elementChanges = parseTaskQueueResults({ element, updatedElement, updatedTask })
+
+        return elementChanges
+          ? [...updatedElements, ...elementChanges]
+          : updatedElements
+      }
+      else if (task.__type === 'GATHER') {
+        const {
+          updatedElement,
+          additionalUpdatedElements,
+          updatedTask
+        } = processGatherTask({ logInfo, logAlert, addCrystals, addGas, commandCenters, resources, element, task, now })
+        const elementChanges = parseTaskQueueResults({ element, updatedElement, updatedTask, additionalUpdatedElements })
+
+        return elementChanges
+          ? [...updatedElements, ...elementChanges]
+          : updatedElements
       }
     }
 
-    return updatingElement
-  }, { ...element })
-
-  return updatedElement
+    return updatedElements
+  }, <readonly Element[]>[])
 }
 
-type ProcessBuildTaskParams = {
+type ParseTaskQueueResultsParams = {
   element: Element
-  logInfo: (message: string) => void
-  task: BuildTask
-  now: number
+  updatedElement?: Element
+  updatedTask?: Task
+  additionalUpdatedElements?: readonly Element[]
 }
 
-type ProcessBuildTaskReturn = {
-  updatedElement: Element
-  updatedTask: BuildTask
+/**
+ * Parse out a given element and optional element updates, optional task updates, and
+ * optional updated to additional elements in order to return an array of element updates,
+ * including task queue changes to the canonical element if needed.
+ * 
+ * No updates will return an empty array to signify no updates to even the canonical element.
+ */
+const parseTaskQueueResults = ({
+  element,
+  updatedElement,
+  updatedTask,
+  additionalUpdatedElements = []
+}: ParseTaskQueueResultsParams): readonly Element[] => {
+  if (updatedTask && updatedElement) {
+    return [
+      ...additionalUpdatedElements,
+      updateTaskQueue(updatedElement, updatedTask)
+    ]
+  }
+  else if (updatedTask) {
+    return [
+      ...additionalUpdatedElements,
+      updateTaskQueue(element, updatedTask)
+    ]
+  }
+  else if (updatedElement) {
+    return [
+      ...additionalUpdatedElements,
+      updatedElement
+    ]
+  }
+
+  return []
 }
 
-const processBuildTask = ({ element, logInfo, task, now }: ProcessBuildTaskParams): ProcessBuildTaskReturn => {
-  if (task.startedAt && now >= (task.startedAt + (task.duration * 1000))) {
-    task.onComplete()
-    logInfo(`Finished task - ${task.description}`)
-    return {
-      updatedElement: {
-        ...element,
-        status: 'Idle'
-      },
-      updatedTask: markTaskDone(task, now)
-    }
-  }
-
-  return {
-    updatedElement: element,
-    updatedTask: task
-  }
-}
-
-type ProcessMoveTaskParams = {
-  logInfo: (message: string) => void
-  logAlert: (message: string) => void
-  element: Element
-  task: MoveTask
-  now: number
-}
-
-type ProcessMoveTaskReturn = {
-  updatedElement: Element
-  updatedTask: MoveTask
-}
-
-const processMoveTask = ({ logInfo, logAlert, element, task, now }: ProcessMoveTaskParams): ProcessMoveTaskReturn => {
-  const elementLocation = element.location
-  const targetLocation = task.target
-
-  if (!elementLocation) {
-    logAlert(`Cannot continue task - ${task.description} - I don't know where I am`)
-    return {
-      updatedElement: {
-        ...element,
-        status: 'MIA'
-      },
-      updatedTask: {
-        ...task,
-        status: 'CANCELED'
-      }
-    }
-  }
-
-  if (!targetLocation) {
-    logAlert(`Cannot perform task - ${task.description} - I cannot find it`)
-    return {
-      updatedElement: {
-        ...element,
-        status: 'Confused'
-      },
-      updatedTask: {
-        ...task,
-        status: 'CANCELED'
-      }
-    }
-  }
-
-  if (elementsAreInRange(elementLocation.coords, targetLocation)) {
-    task.onComplete()
-    logInfo(`Finished task - ${task.description}`)
-    return {
-      updatedElement: {
-        ...element,
-        status: 'Idle'
-      },
-      updatedTask: markTaskDone(task, now)
-    }
-  }
-
-  // TODO validate move
-  const nextStep = calculateNextStep(elementLocation.coords, targetLocation)
-
-  return {
-    updatedElement: {
-      ...element,
-      location: {
-        ...element.location,
-        coords: nextStep
-      },
-      status: getTaskStatus(task)
-    },
-    updatedTask: task
-  }
-}
+/**
+ * Update a given task in a given element's task queue and return the updated element
+ */
+const updateTaskQueue = (element: Element, task: Task): Element => ({
+  ...element,
+  taskQueue: [
+    ...element.taskQueue.filter(_task => _task.__id !== task.__id),
+    task
+  ]
+})

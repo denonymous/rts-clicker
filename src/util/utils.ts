@@ -1,13 +1,28 @@
 import type { Coords, Resources } from '../types/common'
+import { CommandCenter } from '../types/structures'
 import type { Task } from '../types/tasks'
+import type { Element } from '../types/elements'
 
 export const getTaskStatus = (task: Task): string => {
   if (task.__type === 'BUILD' && task.__key === 'CREATE_COMMAND_CENTER') {
     return 'Building new Command Center'
-  } else if (task.__type === 'BUILD' && task.__key === 'CREATE_ENGINEER') {
+  }
+  else if (task.__type === 'BUILD' && task.__key === 'CREATE_ENGINEER') {
     return 'Training new Engineer'
-  } else if (task.__type === 'MOVE') {
-    return `In transit to [${task.target.x},${task.target.y}]`
+  }
+  else if (task.__type === 'MOVE') {
+    return `In transit to [${task.targetCoords.x},${task.targetCoords.y}]`
+  }
+  else if (task.__type === 'GATHER') {
+    if (task.phase === 'GATHERING RESOURCE') {
+      return `Gathering from ${task.targetResource.name}`
+    }
+    else if (task.phase === 'MOVING TO RESOURCE') {
+      return `Moving to ${task.targetResource.name}`
+    }
+    else if (task.phase === 'RETURNING RESOURCE') {
+      return `Returning resources from ${task.targetResource.name}`
+    }
   }
 
   return '???'
@@ -73,4 +88,36 @@ export const calculateNextStep = (movingCoords: Coords, targetCoords: Coords) =>
   return Math.abs(distanceX) > Math.abs(distanceY)
     ? { x: distanceX < 0 ? movingCoords.x - 1 : movingCoords.x + 1, y: movingCoords.y }
     : { x: movingCoords.x, y: distanceY < 0 ? movingCoords.y - 1 : movingCoords.y + 1 }
+}
+
+type NearestCommandCenter = {
+  nearestCommandCenter?: CommandCenter
+  nearestDistance: number
+}
+
+export const findNearestCommandCenter = (coords: Coords, commandCenters: readonly CommandCenter[]) => {
+  const init: NearestCommandCenter = { nearestCommandCenter: undefined, nearestDistance: Number.MAX_SAFE_INTEGER }
+
+  return commandCenters.reduce(({ nearestCommandCenter, nearestDistance }, curr) => {
+    const distanceX = curr.location.coords.x - coords.x
+    const distanceY = curr.location.coords.y - coords.y
+    const totalDistance = Math.abs(distanceX) + Math.abs(distanceY)
+
+    return totalDistance < nearestDistance
+      ? { nearestCommandCenter: curr, nearestDistance: totalDistance }
+      : { nearestCommandCenter, nearestDistance }
+  }, init)
+}
+
+export const moveElement = (element: Element, targetCoords: Coords): Element => {
+  // TODO validate move
+  const nextStep = calculateNextStep(element.location.coords, targetCoords)
+
+  return {
+    ...element,
+    location: {
+      ...element.location,
+      coords: nextStep
+    }
+  }
 }
