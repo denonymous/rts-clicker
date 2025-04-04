@@ -4,10 +4,10 @@ import type { Task } from '../types/tasks'
 import type { Element } from '../types/elements'
 
 export const getTaskStatus = (task: Task): string => {
-  if (task.__type === 'BUILD' && task.__key === 'CREATE_COMMAND_CENTER') {
+  if (task.__type === 'BUILD' && task.__key === 'BUILD COMMAND CENTER') {
     return 'Building new Command Center'
   }
-  else if (task.__type === 'BUILD' && task.__key === 'CREATE_ENGINEER') {
+  else if (task.__type === 'BUILD' && task.__key === 'TRAIN ENGINEER') {
     return 'Training new Engineer'
   }
   else if (task.__type === 'MOVE') {
@@ -60,6 +60,11 @@ export const markTaskCannotAfford = <T extends Task>(task: T): T => ({ ...task, 
  * Mark a given task as complete and return it
  */
 export const markTaskDone = <T extends Task>(task: T, finishedAt: number): T => ({ ...task, finishedAt, status: 'COMPLETE' })
+
+/**
+ * Mark a given task as canceled and return it
+ */
+export const markTaskCanceled = <T extends Task>(task: T): T => ({ ...task, status: 'CANCELED' })
 
 /**
  * Return whether two sets of coords are within a given range

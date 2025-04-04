@@ -17,6 +17,7 @@ export const GatherResourceTaskButton = ({ engineer }: GatherResourceTaskButtonP
     const taskQueue = [
       ...engineer.taskQueue
     ]
+
     selectedResource && taskQueue.push({
       __id: uuid(),
       __type: 'GATHER',
@@ -40,7 +41,7 @@ export const GatherResourceTaskButton = ({ engineer }: GatherResourceTaskButtonP
   const gatherResourceOptions = [...elements.values()]
     .filter(e => e.__elementType === 'RESOURCE')
     .filter(e => e.currentValue > 0)
-    .filter(e => e.__type === 'CRYSTAL PATCH' || e.hasRefinery)
+    .filter(e => e.__type === 'CRYSTAL PATCH' || (e.__type === 'GAS VENT' && e.refineryStatus === 'COMPLETE'))
     .map(el => (
       <option
         key={`gatherResource-${engineer.__id}-${el.__id}`}

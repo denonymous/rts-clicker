@@ -16,7 +16,7 @@ export type GasVent = ResourcePrototype & {
   __type: 'GAS VENT'
   __width: 2
   __height: 1
-  hasRefinery: boolean
+  refineryStatus: 'NONE' | 'BUILDING' | 'COMPLETE'
 }
 
 export type Resource = CrystalPatch | GasVent

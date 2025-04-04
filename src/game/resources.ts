@@ -43,6 +43,7 @@ export const createGasVent = ({ location }: CreateResourceProps): GasVent => {
     __height: 1,
     location,
     status: 'Idle',
+    refineryStatus: 'NONE',
     name: `Gas Vent [${location.coords.x},${location.coords.y}]`,
     availableTasks: [],
     hitPoints: RESOURCE_INIT_HP,

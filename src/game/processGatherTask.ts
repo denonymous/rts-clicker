@@ -83,6 +83,17 @@ export const processGatherTask = ({ logAlert, addCrystals, addGas, commandCenter
       return { updatedTask }
     }
 
+    if (resource.__type === 'GAS VENT' && resource.refineryStatus !== 'COMPLETE') {
+      const updatedTask: GatherTask = {
+        ...task,
+        status: 'CANCELED'
+      }
+
+      logAlert(`${resource.name} does not have a Gas Refinery, cannot gather`)
+
+      return { updatedTask }
+    }
+
     if (task.phaseStartedAt && now >= (task.phaseStartedAt + (element.gatherSpeed * 1000))) {
       const updatedResource = {
         ...resource,

@@ -1,4 +1,4 @@
-import type { Resources } from '../types/common'
+import type { Resources, TaskQueue } from '../types/common'
 import type { Element } from '../types/elements'
 import { Resource } from '../types/resources'
 import { CommandCenter } from '../types/structures'
@@ -7,6 +7,7 @@ import {
   canAfford,
   getTaskStatus,
   markTaskBegun,
+  markTaskCanceled,
   markTaskCannotAfford
 } from '../util/utils'
 import { processBuildTask } from './processBuildTask'
@@ -99,30 +100,7 @@ const processElementTaskQueue = ({
   const tasksInProgress = element.taskQueue.reduce((acc, curr) => curr.status === 'IN PROGRESS' ? acc + 1 : acc, 0)
 
   if (!tasksInProgress) {
-    const taskToStart = element.taskQueue.find(task => !['IN PROGRESS', 'COMPLETE'].includes(task.status))
-
-    if (taskToStart) {
-      if (canAfford(currentResources, taskToStart.cost)) {
-        removeCrystals(taskToStart.cost.crystals)
-        removeGas(taskToStart.cost.gas)
-
-        // TODO don't love directly updating the task element here
-        element.taskQueue = [
-          ...element.taskQueue.filter(task => task.__id !== taskToStart.__id),
-          markTaskBegun(taskToStart, now)
-        ]
-        element.status = getTaskStatus(taskToStart)
-        logInfo(`Starting task - ${taskToStart.description}`)
-      } else {
-        // TODO or here
-        element.taskQueue = [
-          ...element.taskQueue.filter(task => task.__id !== taskToStart.__id),
-          markTaskCannotAfford(taskToStart)
-        ]
-        element.status = 'Idle'
-        logAlert(`Could not afford to start task - ${taskToStart.description}`)
-      }
-    }
+    element.taskQueue = startNewTask(element.taskQueue)
   }
 
   return element.taskQueue.reduce((updatedElements, task) => {
@@ -213,3 +191,49 @@ const updateTaskQueue = (element: Element, task: Task): Element => ({
     task
   ]
 })
+
+const startNewTask = (taskQueue: TaskQueue, currentResources: Resources): TaskQueue => {
+  const taskToStart = taskQueue.find(task => !['IN PROGRESS', 'COMPLETE'].includes(task.status))
+
+  if (!taskToStart) {
+    return taskQueue
+  }
+
+  if (!canAfford(currentResources, taskToStart.cost)) {
+    // TODO or here
+    return [
+      ...taskQueue.filter(task => task.__id !== taskToStart.__id),
+      markTaskCannotAfford(taskToStart)
+    ]
+  }
+  element.status = 'Idle'
+  logAlert(`Could not afford to start task - ${taskToStart.description}`)
+
+  if (taskToStart.__type === 'BUILD') {
+    try {
+      taskToStart.onStart()
+    } catch (e) {
+      element.taskQueue = [
+        ...element.taskQueue.filter(task => task.__id !== taskToStart.__id),
+        markTaskCanceled(taskToStart)
+      ]
+      element.status = 'Idle'
+      logAlert(`Could not afford to start task - ${taskToStart.description}`)
+    }
+  }
+
+  removeCrystals(taskToStart.cost.crystals)
+  removeGas(taskToStart.cost.gas)
+
+  // TODO don't love directly updating the element here
+  element.taskQueue = [
+    ...element.taskQueue.filter(task => task.__id !== taskToStart.__id),
+    markTaskBegun(taskToStart, now)
+  ]
+  element.status = getTaskStatus(taskToStart)
+  logInfo(`Starting task - ${taskToStart.description}`)
+} else {
+}
+}
+
+}

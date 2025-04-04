@@ -13,7 +13,13 @@ export type CommandCenter = StructurePrototype & {
 export type Barracks = StructurePrototype & {
   __type: 'BARRACKS'
   __width: 2
-  __height: 2
+  __height: 1
 }
 
-export type Structure = CommandCenter | Barracks
+export type GasRefinery = StructurePrototype & {
+  __type: 'GAS REFINERY'
+  __width: 2
+  __height: 1
+}
+
+export type Structure = CommandCenter | Barracks | GasRefinery
