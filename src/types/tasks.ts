@@ -1,7 +1,7 @@
 import type { Coords, Resources } from './common'
 import { Resource } from './resources'
 
-export type TaskKey = 'TRAIN ENGINEER' | 'BUILD COMMAND CENTER' | 'MOVE TO' | 'GATHER RESOURCE' | 'BUILD GAS REFINERY'
+export type TaskKey = 'TRAIN ENGINEER' | 'BUILD COMMAND CENTER' | 'MOVE TO' | 'GATHER RESOURCE' | 'BUILD GAS REFINERY' | 'TRAIN GRUNT' | 'TRAIN SOLDIER' | 'TRAIN SPECIALIST' | 'BUILD BARRACKS'
 
 export type TaskStatus = 'QUEUED' | 'NOT ENOUGH RESOURCES' | 'IN PROGRESS' | 'COMPLETE' | 'CANCELED'
 
