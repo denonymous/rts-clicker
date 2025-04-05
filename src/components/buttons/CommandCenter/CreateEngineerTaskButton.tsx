@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid'
 import type { CommandCenter } from '../../../types/structures'
 import { createEngineer } from '../../../game/engineer'
 import type { BuildTask } from '../../../types/tasks'
-import { BUILDER_CREATE_COST } from '../../../constants'
+import { BUILDER_TRAINING_COST } from '../../../constants'
 import { ResourcesContext } from '../../../context/ResourcesContext'
 import { canAfford } from '../../../util/utils'
 import { ElementsContext } from '../../../context/ElementsContext'
@@ -22,10 +22,11 @@ export const CreateEngineerTaskButton = ({ commandCenter }: CreateEngineerTaskBu
     const task: BuildTask = {
       __id: uuid(),
       __type: 'BUILD',
-      __key: 'CREATE_ENGINEER',
-      cost: BUILDER_CREATE_COST,
+      __key: 'TRAIN ENGINEER',
+      cost: BUILDER_TRAINING_COST,
       description: 'Train new Engineer',
       duration: 5,
+      onStart: () => {},
       onComplete: () => {
         const eng = createEngineer({ location: commandCenter.location })
         addElement(eng)
@@ -45,7 +46,7 @@ export const CreateEngineerTaskButton = ({ commandCenter }: CreateEngineerTaskBu
 
   return (
     <button
-      disabled={!canAfford({ crystals, gas }, BUILDER_CREATE_COST)}
+      disabled={!canAfford({ crystals, gas }, BUILDER_TRAINING_COST)}
       onClick={() => enqueueCreateEngineer(commandCenter)}
     >
       train Engineer

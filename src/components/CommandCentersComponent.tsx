@@ -34,7 +34,7 @@ const AvailableTasksComponent = ({ commandCenter }: CCProps) =>
   <section>
     {
       commandCenter.availableTasks.map(taskKey =>
-        taskKey === 'CREATE_ENGINEER'
+        taskKey === 'TRAIN ENGINEER'
           ? <CreateEngineerTaskButton key={`${commandCenter.__id}-createEngineerButton`} commandCenter={commandCenter} />
           : <></>
       )

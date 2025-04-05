@@ -1,7 +1,7 @@
 import type { Coords, Resources } from './common'
 import { Resource } from './resources'
 
-export type TaskKey = 'CREATE_ENGINEER' | 'CREATE_COMMAND_CENTER' | 'MOVE TO' | 'GATHER RESOURCE'
+export type TaskKey = 'TRAIN ENGINEER' | 'BUILD COMMAND CENTER' | 'MOVE TO' | 'GATHER RESOURCE' | 'BUILD GAS REFINERY'
 
 export type TaskStatus = 'QUEUED' | 'NOT ENOUGH RESOURCES' | 'IN PROGRESS' | 'COMPLETE' | 'CANCELED'
 
@@ -18,6 +18,7 @@ type TaskPrototype = {
 export type BuildTask = TaskPrototype & {
   __type: 'BUILD'
   duration: number
+  onStart: () => void
   onComplete: () => void
 }
 

@@ -1,7 +1,8 @@
 import { BUILDER_INIT_HP } from '../constants'
 import type { Engineer } from '../types/units'
 import { TaskQueueComponent } from './TaskQueueComponent'
-import { CreateCommandCenterTaskButton } from './buttons/Engineer/CreateCommandCenterTaskButton'
+import { BuildCommandCenterTaskButton } from './buttons/Engineer/BuildCommandCenterTaskButton'
+import { BuildGasRefineryTaskButton } from './buttons/Engineer/BuildGasRefineryTaskButton'
 import { GatherResourceTaskButton } from './buttons/Engineer/GatherResourceTaskButton'
 import { MoveToTaskButton } from './buttons/Engineer/MoveToTaskButton'
 
@@ -34,13 +35,15 @@ const AvailableTasksComponent = ({ engineer }: EngProps) =>
   <section>
     {
       engineer.availableTasks.map(taskKey =>
-        taskKey === 'CREATE_COMMAND_CENTER'
-          ? <CreateCommandCenterTaskButton key={`${engineer.__id}-createCommandCenterButton`} engineer={engineer} />
+        taskKey === 'BUILD COMMAND CENTER'
+          ? <BuildCommandCenterTaskButton key={`${engineer.__id}-createCommandCenterButton`} engineer={engineer} />
           : taskKey === 'MOVE TO'
             ? <MoveToTaskButton key={`${engineer.__id}-moveToButton`} engineer={engineer} />
             : taskKey === 'GATHER RESOURCE'
               ? <GatherResourceTaskButton key={`${engineer.__id}-gatherResourceButton`} engineer={engineer} />
-              : <></>
+              : taskKey === 'BUILD GAS REFINERY'
+                ? <BuildGasRefineryTaskButton key={`${engineer.__id}-createGasRefineryButton`} engineer={engineer} />
+                : <></>
       )
     }
   </section>

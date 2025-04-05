@@ -20,7 +20,7 @@ export const createCommandCenter = ({ location }: CreateCommandCenterProps): Com
     location,
     status: 'Idle',
     name: `Command Center ${randomStructureName()}`,
-    availableTasks: ['CREATE_ENGINEER'],
+    availableTasks: ['TRAIN ENGINEER'],
     hitPoints: COMMAND_CENTER_INIT_HP,
     taskQueue: []
   }
