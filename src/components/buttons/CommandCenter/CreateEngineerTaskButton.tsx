@@ -26,6 +26,7 @@ export const CreateEngineerTaskButton = ({ commandCenter }: CreateEngineerTaskBu
       cost: BUILDER_TRAINING_COST,
       description: 'Train new Engineer',
       duration: 5,
+      onStart: () => {},
       onComplete: () => {
         const eng = createEngineer({ location: commandCenter.location })
         addElement(eng)

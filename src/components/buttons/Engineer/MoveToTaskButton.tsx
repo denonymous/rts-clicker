@@ -20,23 +20,26 @@ export const MoveToTaskButton = ({ engineer }: MoveToTaskButtonProps) => {
     const taskQueue = [
       ...engineer.taskQueue
     ]
-    selectedElement && taskQueue.push({
-      __id: uuid(),
-      __type: 'MOVE',
-      __key: 'MOVE TO',
-      cost: { crystals: 0, gas: 0 },
-      description: `Move to ${selectedElement.name}`,
-      onComplete: () => logInfo(engineer)(`Arrived at ${selectedElement.name}`),
-      target: selectedElement.location.coords,
-      status: 'QUEUED'
-    })
+    
+    if (selectedElement) {
+      taskQueue.push({
+        __id: uuid(),
+        __type: 'MOVE',
+        __key: 'MOVE TO',
+        cost: { crystals: 0, gas: 0 },
+        description: `Move to ${selectedElement.name}`,
+        onComplete: () => logInfo(engineer)(`Arrived at ${selectedElement.name}`),
+        targetCoords: selectedElement.location.coords,
+        status: 'QUEUED'
+      })
 
-    updateElement({
-      ...engineer,
-      taskQueue
-    })
+      updateElement({
+        ...engineer,
+        taskQueue
+      })
 
-    setSelectedElement(undefined)
+      setSelectedElement(undefined)
+    }
   }
 
   const moveToOptions = [...elements.values()]

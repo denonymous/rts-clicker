@@ -4,7 +4,7 @@ import type { Engineer } from '../../../types/units'
 import { createGasRefinery } from '../../../game/gasRefinery'
 import { ResourcesContext } from '../../../context/ResourcesContext'
 import { GAS_REFINERY_BUILDING_COST, GAS_REFINERY_BUILDING_DURATION } from '../../../constants'
-import { canAfford } from '../../../util/utils'
+import { canAfford, elementsAreInRange } from '../../../util/utils'
 import { ElementsContext } from '../../../context/ElementsContext'
 import { LogContext } from '../../../context/LogContext'
 import type { GasVent } from '../../../types/resources'
@@ -25,45 +25,60 @@ export const BuildGasRefineryTaskButton = ({ engineer }: BuildGasRefineryTaskBut
       ...engineer.taskQueue
     ]
 
-    selectedGasVent && taskQueue.push({
-      __id: uuid(),
-      __type: 'BUILD',
-      __key: 'BUILD GAS REFINERY',
-      cost: GAS_REFINERY_BUILDING_COST,
-      description: 'Build new Gas Refinery',
-      duration: GAS_REFINERY_BUILDING_DURATION,
-      onStart: () => {
-        if (selectedGasVent.refineryStatus !== 'NONE') {
-          throw new Error(`Gas Refinery already exists at ${selectedGasVent.name}`)
-        }
-
-        updateElement({
-          ...selectedGasVent,
-          refineryStatus: 'BUILDING'
+    if (selectedGasVent) {
+      if (!elementsAreInRange(engineer.location.coords, selectedGasVent.location.coords)) {
+        taskQueue.push({
+          __id: uuid(),
+          __type: 'MOVE',
+          __key: 'MOVE TO',
+          cost: { crystals: 0, gas: 0 },
+          description: `Move to ${selectedGasVent.name}`,
+          onComplete: () => logInfo(engineer)(`Arrived at ${selectedGasVent.name}`),
+          targetCoords: selectedGasVent.location.coords,
+          status: 'QUEUED'
         })
-      },
-      onComplete: () => {
-        const cc = createGasRefinery({ gasVent: selectedGasVent })
-        addElement(cc)
-        updateElement({
-          ...selectedGasVent,
-          refineryStatus: 'COMPLETE'
-        })
-        logInfo(cc)(`Built and ready for action`)
-      },
-      status: 'QUEUED'
-    })
+      }
 
-    updateElement({
-      ...engineer,
-      taskQueue
-    })
+      taskQueue.push({
+        __id: uuid(),
+        __type: 'BUILD',
+        __key: 'BUILD GAS REFINERY',
+        cost: GAS_REFINERY_BUILDING_COST,
+        description: 'Build new Gas Refinery',
+        duration: GAS_REFINERY_BUILDING_DURATION,
+        onStart: () => {
+          if (selectedGasVent.refineryStatus !== 'NONE') {
+            throw new Error(`Gas Refinery already exists at ${selectedGasVent.name}`)
+          }
 
-    setSelectedGasVent(undefined)
+          updateElement({
+            ...selectedGasVent,
+            refineryStatus: 'BUILDING'
+          })
+        },
+        onComplete: () => {
+          const cc = createGasRefinery({ gasVent: selectedGasVent })
+          addElement(cc)
+          updateElement({
+            ...selectedGasVent,
+            refineryStatus: 'COMPLETE'
+          })
+          logInfo(cc)(`Built and ready for action`)
+        },
+        status: 'QUEUED'
+      })
+
+      updateElement({
+        ...engineer,
+        taskQueue
+      })
+
+      setSelectedGasVent(undefined)
+    }
   }
 
   const gasVentOptions = [...elements.values()]
-    .filter(e => e.__type === 'GAS VENT')
+    .filter(e => e.__type === 'GAS VENT' && e.refineryStatus === 'NONE')
     .map(el => (
       <option
         key={`buildGasRefinery-${engineer.__id}-${el.__id}`}

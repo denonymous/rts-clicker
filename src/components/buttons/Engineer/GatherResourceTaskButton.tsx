@@ -18,24 +18,26 @@ export const GatherResourceTaskButton = ({ engineer }: GatherResourceTaskButtonP
       ...engineer.taskQueue
     ]
 
-    selectedResource && taskQueue.push({
-      __id: uuid(),
-      __type: 'GATHER',
-      __key: 'GATHER RESOURCE',
-      phase: 'MOVING TO RESOURCE',
-      cost: { crystals: 0, gas: 0 },
-      description: `Gather from ${selectedResource.name}`,
-      onComplete: () => { },
-      targetResource: selectedResource,
-      status: 'QUEUED'
-    })
+    if (selectedResource) {
+      taskQueue.push({
+        __id: uuid(),
+        __type: 'GATHER',
+        __key: 'GATHER RESOURCE',
+        phase: 'MOVING TO RESOURCE',
+        cost: { crystals: 0, gas: 0 },
+        description: `Gather from ${selectedResource.name}`,
+        onComplete: () => { },
+        targetResource: selectedResource,
+        status: 'QUEUED'
+      })
 
-    updateElement({
-      ...engineer,
-      taskQueue
-    })
+      updateElement({
+        ...engineer,
+        taskQueue
+      })
 
-    setSelectedResource(undefined)
+      setSelectedResource(undefined)
+    }
   }
 
   const gatherResourceOptions = [...elements.values()]

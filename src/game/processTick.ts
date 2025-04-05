@@ -1,4 +1,4 @@
-import type { Resources, TaskQueue } from '../types/common'
+import type { Resources } from '../types/common'
 import type { Element } from '../types/elements'
 import { Resource } from '../types/resources'
 import { CommandCenter } from '../types/structures'
@@ -96,28 +96,26 @@ const processElementTaskQueue = ({
   element,
   now
 }: ProcessElementTaskQueueParams): readonly Element[] => {
+  const _element = element.taskQueue.reduce((acc, curr) => curr.status === 'IN PROGRESS' ? acc + 1 : acc, 0) === 0
+    ? startNewTask(element, currentResources, logInfo, logAlert, removeCrystals, removeGas, now)
+    : element
 
-  const tasksInProgress = element.taskQueue.reduce((acc, curr) => curr.status === 'IN PROGRESS' ? acc + 1 : acc, 0)
-
-  if (!tasksInProgress) {
-    element.taskQueue = startNewTask(element.taskQueue)
-  }
-
-  return element.taskQueue.reduce((updatedElements, task) => {
-    if (task.status === 'IN PROGRESS') {
+  return _element.taskQueue
+    .filter(task => task.status === 'IN PROGRESS')
+    .reduce((updatedElements, task) => {
       if (task.__type === 'BUILD') {
-        const { updatedElement, updatedTask } = processBuildTask({ logInfo, element, task, now })
-        const elementChanges = parseTaskQueueResults({ element, updatedElement, updatedTask })
+        const { updatedElement, updatedTask } = processBuildTask({ logInfo, element: _element, task, now })
+        const elementChanges = parseTaskQueueResults({ element: _element, updatedElement, updatedTask })
 
-        return elementChanges
+        return elementChanges.length
           ? [...updatedElements, ...elementChanges]
           : updatedElements
       }
       else if (task.__type === 'MOVE') {
-        const { updatedElement, updatedTask } = processMoveTask({ logInfo, logAlert, element: element, task, now })
-        const elementChanges = parseTaskQueueResults({ element, updatedElement, updatedTask })
+        const { updatedElement, updatedTask } = processMoveTask({ logInfo, logAlert, element: _element, task, now })
+        const elementChanges = parseTaskQueueResults({ element: _element, updatedElement, updatedTask })
 
-        return elementChanges
+        return elementChanges.length
           ? [...updatedElements, ...elementChanges]
           : updatedElements
       }
@@ -126,17 +124,16 @@ const processElementTaskQueue = ({
           updatedElement,
           additionalUpdatedElements,
           updatedTask
-        } = processGatherTask({ logInfo, logAlert, addCrystals, addGas, commandCenters, resources, element, task, now })
-        const elementChanges = parseTaskQueueResults({ element, updatedElement, updatedTask, additionalUpdatedElements })
+        } = processGatherTask({ logAlert, addCrystals, addGas, commandCenters, resources, element: _element, task, now })
+        const elementChanges = parseTaskQueueResults({ element: _element, updatedElement, updatedTask, additionalUpdatedElements })
 
-        return elementChanges
+        return elementChanges.length
           ? [...updatedElements, ...elementChanges]
           : updatedElements
       }
-    }
 
-    return updatedElements
-  }, <readonly Element[]>[])
+      return updatedElements
+    }, <readonly Element[]>[])
 }
 
 type ParseTaskQueueResultsParams = {
@@ -178,7 +175,7 @@ const parseTaskQueueResults = ({
     ]
   }
 
-  return []
+  return [ element ]
 }
 
 /**
@@ -192,48 +189,43 @@ const updateTaskQueue = (element: Element, task: Task): Element => ({
   ]
 })
 
-const startNewTask = (taskQueue: TaskQueue, currentResources: Resources): TaskQueue => {
-  const taskToStart = taskQueue.find(task => !['IN PROGRESS', 'COMPLETE'].includes(task.status))
+const startNewTask = (
+  element: Element,
+  currentResources: Resources,
+  logInfo: (message: string) => void,
+  logAlert: (message: string) => void,
+  removeCrystals: (val: number) => void,
+  removeGas: (val: number) => void,
+  now: number
+): Element => {
+  const taskToStart = element.taskQueue.find(task => !['IN PROGRESS', 'COMPLETE'].includes(task.status))
 
   if (!taskToStart) {
-    return taskQueue
+    return element
   }
 
   if (!canAfford(currentResources, taskToStart.cost)) {
-    // TODO or here
-    return [
-      ...taskQueue.filter(task => task.__id !== taskToStart.__id),
-      markTaskCannotAfford(taskToStart)
-    ]
+    if (taskToStart.status !== 'NOT ENOUGH RESOURCES') {
+      logAlert(`Could not afford to start task - ${taskToStart.description}`)
+    }
+    return updateTaskQueue(element, markTaskCannotAfford(taskToStart))
   }
-  element.status = 'Idle'
-  logAlert(`Could not afford to start task - ${taskToStart.description}`)
 
   if (taskToStart.__type === 'BUILD') {
     try {
       taskToStart.onStart()
     } catch (e) {
-      element.taskQueue = [
-        ...element.taskQueue.filter(task => task.__id !== taskToStart.__id),
-        markTaskCanceled(taskToStart)
-      ]
-      element.status = 'Idle'
-      logAlert(`Could not afford to start task - ${taskToStart.description}`)
+      logAlert(`Could not start task - ${taskToStart.description}`)
+      return updateTaskQueue(element, markTaskCanceled(taskToStart))
     }
   }
 
   removeCrystals(taskToStart.cost.crystals)
   removeGas(taskToStart.cost.gas)
-
-  // TODO don't love directly updating the element here
-  element.taskQueue = [
-    ...element.taskQueue.filter(task => task.__id !== taskToStart.__id),
-    markTaskBegun(taskToStart, now)
-  ]
-  element.status = getTaskStatus(taskToStart)
   logInfo(`Starting task - ${taskToStart.description}`)
-} else {
-}
-}
 
+  return {
+    ...updateTaskQueue(element, markTaskBegun(taskToStart, now)),
+    status: getTaskStatus(taskToStart)
+  }
 }
