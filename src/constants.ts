@@ -110,3 +110,7 @@ export const COMMAND_CENTER_INIT_HP = 3_000
 export const GAS_REFINERY_BUILDING_COST: Resources = { crystals: 1_000, gas: 0 }
 export const GAS_REFINERY_BUILDING_DURATION = 30
 export const GAS_REFINERY_INIT_HP = 2_400
+
+export const BARRACKS_BUILDING_COST: Resources = { crystals: 1_200, gas: 400 }
+export const BARRACKS_BUILDING_DURATION = 30
+export const BARRACKS_INIT_HP = 2_000

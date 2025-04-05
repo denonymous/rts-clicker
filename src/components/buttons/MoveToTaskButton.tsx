@@ -1,16 +1,15 @@
 import { useContext, useState } from 'react'
 import { v4 as uuid } from 'uuid'
-import type { Element } from '../../../types/elements'
-import type { Engineer } from '../../../types/units'
-import { ElementsContext } from '../../../context/ElementsContext'
-import { LogContext } from '../../../context/LogContext'
-import { elementsAreInRange } from '../../../util/utils'
+import type { Element } from '../../types/elements'
+import { ElementsContext } from '../../context/ElementsContext'
+import { LogContext } from '../../context/LogContext'
+import { elementsAreInRange } from '../../util/utils'
 
 type MoveToTaskButtonProps = {
-  engineer: Engineer
+  element: Element
 }
 
-export const MoveToTaskButton = ({ engineer }: MoveToTaskButtonProps) => {
+export const MoveToTaskButton = ({ element }: MoveToTaskButtonProps) => {
   const { elements, updateElement } = useContext(ElementsContext)
   const { logInfo } = useContext(LogContext)
 
@@ -18,7 +17,7 @@ export const MoveToTaskButton = ({ engineer }: MoveToTaskButtonProps) => {
 
   const enqueueMoveTo = () => {
     const taskQueue = [
-      ...engineer.taskQueue
+      ...element.taskQueue
     ]
     
     if (selectedElement) {
@@ -28,13 +27,13 @@ export const MoveToTaskButton = ({ engineer }: MoveToTaskButtonProps) => {
         __key: 'MOVE TO',
         cost: { crystals: 0, gas: 0 },
         description: `Move to ${selectedElement.name}`,
-        onComplete: () => logInfo(engineer)(`Arrived at ${selectedElement.name}`),
+        onComplete: () => logInfo(element)(`Arrived at ${selectedElement.name}`),
         targetCoords: selectedElement.location.coords,
         status: 'QUEUED'
       })
 
       updateElement({
-        ...engineer,
+        ...element,
         taskQueue
       })
 
@@ -43,11 +42,11 @@ export const MoveToTaskButton = ({ engineer }: MoveToTaskButtonProps) => {
   }
 
   const moveToOptions = [...elements.values()]
-    .filter(e => e.__id !== engineer.__id)
-    .filter(e => !elementsAreInRange(engineer.location.coords, e.location.coords))
+    .filter(e => e.__id !== element.__id)
+    .filter(e => !elementsAreInRange(element.location.coords, e.location.coords))
     .map(el => (
       <option
-        key={`moveTo-${engineer.__id}-${el.__id}`}
+        key={`moveTo-${element.__id}-${el.__id}`}
         selected={selectedElement?.__id === el.__id}
         value={el.__id}
       >

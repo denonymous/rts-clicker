@@ -13,6 +13,18 @@ export const getTaskStatus = (task: Task): string => {
   else if (task.__type === 'BUILD' && task.__key === 'BUILD GAS REFINERY') {
     return 'Building new Gas Refinery'
   }
+  else if (task.__type === 'BUILD' && task.__key === 'BUILD BARRACKS') {
+    return 'Building new Barracks'
+  }
+  else if (task.__type === 'BUILD' && task.__key === 'TRAIN GRUNT') {
+    return 'Training new Grunt'
+  }
+  else if (task.__type === 'BUILD' && task.__key === 'TRAIN SOLDIER') {
+    return 'Training new Soldier'
+  }
+  else if (task.__type === 'BUILD' && task.__key === 'TRAIN SPECIALIST') {
+    return 'Training new Specialist'
+  }
   else if (task.__type === 'MOVE') {
     return `In transit to [${task.targetCoords.x},${task.targetCoords.y}]`
   }

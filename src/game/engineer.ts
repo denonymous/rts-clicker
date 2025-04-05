@@ -32,7 +32,7 @@ export const createEngineer = ({ location }: CreateEngineerProps): Engineer => {
     location,
     status: 'Idle',
     name: `Engineer ${randomUnitName()}`,
-    availableTasks: ['BUILD COMMAND CENTER', 'MOVE TO', 'GATHER RESOURCE', 'BUILD GAS REFINERY'],
+    availableTasks: ['BUILD COMMAND CENTER', 'MOVE TO', 'GATHER RESOURCE', 'BUILD GAS REFINERY', 'BUILD BARRACKS'],
     hitPoints: BUILDER_INIT_HP,
     movementSpeed: BUILDER_INIT_MOVEMENT_SPEED,
     aggroRange: BUILDER_INIT_AGGRO_RANGE,

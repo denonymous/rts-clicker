@@ -12,6 +12,10 @@ import { buildLogContext, LogContext } from './context/LogContext'
 import { LogComponent } from './components/LogComponent'
 import { initGame } from './game/init'
 import { ResourcesComponent } from './components/ResourcesComponent'
+import { BarracksesComponent } from './components/BarracksComponent'
+import { GruntsComponent } from './components/GruntsComponent'
+import { SoldiersComponent } from './components/SoldiersComponent'
+import { SpecialistsComponent } from './components/SpecialistsComponent'
 
 function App() {
 
@@ -64,8 +68,12 @@ function App() {
           Crystals: {crystals}/{PLAYER_MAX_RESOURCE_CRYSTALS}, Gas: {gas}/{PLAYER_MAX_RESOURCE_GAS}
           <h2>Structures</h2>
           <CommandCentersComponent commandCenters={[...elements.values()].filter(e => e.__type === 'COMMAND CENTER')} />
+          <BarracksesComponent barrackses={[...elements.values()].filter(e => e.__type === 'BARRACKS')} />
           <h2>Units</h2>
           <EngineersComponent engineers={[...elements.values()].filter(e => e.__type === 'ENGINEER')} />
+          <GruntsComponent grunts={[...elements.values()].filter(e => e.__type === 'GRUNT')} />
+          <SoldiersComponent soldiers={[...elements.values()].filter(e => e.__type === 'SOLDIER')} />
+          <SpecialistsComponent specialists={[...elements.values()].filter(e => e.__type === 'SPECIALIST')} />
           <h2>Resources</h2>
           <ResourcesComponent resources={[...elements.values()].filter(e => e.__elementType === 'RESOURCE')} />
           <h2>Log</h2>
