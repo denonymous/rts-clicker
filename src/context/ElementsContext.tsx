@@ -13,10 +13,48 @@ type ElementsContext = {
 
 export const ElementsContext = createContext<ElementsContext>({
   elements: new Map(),
-  addElement: (_e) => { },
-  addElements: (_es) => { },
-  updateElement: (_e) => { },
-  updateElements: (_es) => { },
-  removeElement: (_e: string) => { },
-  removeElements: (_es: readonly string[]) => { }
+  addElement: () => null,
+  addElements: () => null,
+  updateElement: () => null,
+  updateElements: () => null,
+  removeElement: () => null,
+  removeElements: () => null
 })
+
+export const buildElementsContext = (
+  elements: Map<string, Element>,
+  setElements: React.Dispatch<React.SetStateAction<Map<string, Element>>>
+) => {
+  const addElement = (element: Element) => setElements(curr => new Map(curr.set(element.__id, element)))
+  const addElements = (elements: readonly Element[]) => setElements(curr => {
+    elements.forEach(e => curr.set(e.__id, e))
+    return new Map(curr)
+  })
+
+  const updateElement = (element: Element) => setElements(curr => new Map(curr.set(element.__id, element)))
+  const updateElements = (elements: readonly Element[]) => setElements(curr => new Map(
+    elements.reduce((updatedMap, element) => {
+      const elementId = element.__id
+      return updatedMap.has(elementId) ? updatedMap.set(element.__id, element) : updatedMap
+    }, curr)
+  ))
+
+  const removeElement = (elementId: UUID) => setElements(curr => {
+    curr.delete(elementId)
+    return new Map(curr)
+  })
+  const removeElements = (elementIds: readonly UUID[]) => setElements(curr => {
+    elementIds.forEach(e => curr.delete(e))
+    return new Map(curr)
+  })
+
+  return {
+    elements,
+    addElement,
+    addElements,
+    updateElement,
+    updateElements,
+    removeElement,
+    removeElements
+  }
+}
