@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react'
-import { v4 as uuid } from 'uuid'
 import './App.css'
 import type { Element } from './types/elements'
 import { PLAYER_MAX_RESOURCE_CRYSTALS, PLAYER_MAX_RESOURCE_GAS } from './constants'
 import { CommandCentersComponent } from './components/CommandCentersComponent'
 import { EngineersComponent } from './components/EngineersComponent'
-import { ResourcesContext } from './context/ResourcesContext'
-import { ElementsContext } from './context/ElementsContext'
+import { buildResourcesContext, ResourcesContext } from './context/ResourcesContext'
+import { buildElementsContext, ElementsContext } from './context/ElementsContext'
 import { processTick } from './game/processTick'
 import type { LogEntry, UUID } from './types/common'
-import { LogContext } from './context/LogContext'
+import { buildLogContext, LogContext } from './context/LogContext'
 import { LogComponent } from './components/LogComponent'
 import { initGame } from './game/init'
 import { ResourcesComponent } from './components/ResourcesComponent'
@@ -19,94 +18,18 @@ function App() {
   // log state management
 
   const [log, setLog] = useState<readonly LogEntry[]>([])
-
-  const logMessage = (level: LogEntry['level'], element: Element, message: string) => setLog(curr => [
-    ...curr,
-    {
-      __id: uuid(),
-      level,
-      timestamp: new Date().getTime(),
-      writtenBy: element.__id,
-      message: `${element.name}: ${message}`
-    }
-  ])
-  const logInfo = (element: Element) => (message: string) => logMessage('INFO', element, message)
-  const logAlert = (element: Element) => (message: string) => logMessage('ALERT', element, message)
-
-  const logContext = {
-    log,
-    logInfo,
-    logAlert
-  }
+  const logContext = buildLogContext(log, setLog)
 
   // resource state management
 
   const [crystals, setCrystals] = useState(0)
   const [gas, setGas] = useState(0)
-
-  const addCrystals = (val: number) => setCrystals(curr => {
-    const n = curr + val
-    return n > PLAYER_MAX_RESOURCE_CRYSTALS ? PLAYER_MAX_RESOURCE_CRYSTALS : n
-  })
-  const removeCrystals = (val: number) => setCrystals(curr => {
-    const n = curr - val
-    return n < 0 ? 0 : n
-  })
-
-  const addGas = (val: number) => setGas(curr => {
-    const n = curr + val
-    return n > PLAYER_MAX_RESOURCE_GAS ? PLAYER_MAX_RESOURCE_GAS : n
-  })
-  const removeGas = (val: number) => setGas(curr => {
-    const n = curr - val
-    return n < 0 ? 0 : n
-  })
-
-  const resourcesContext = {
-    crystals,
-    addCrystals,
-    removeCrystals,
-    gas,
-    addGas,
-    removeGas
-  }
+  const resourcesContext = buildResourcesContext(crystals, setCrystals, gas, setGas)
 
   // element state management
 
   const [elements, setElements] = useState<Map<UUID, Element>>(new Map())
-
-  const addElement = (element: Element) => setElements(curr => new Map(curr.set(element.__id, element)))
-  const addElements = (elements: readonly Element[]) => setElements(curr => {
-    elements.forEach(e => curr.set(e.__id, e))
-    return new Map(curr)
-  })
-
-  const updateElement = (element: Element) => setElements(curr => new Map(curr.set(element.__id, element)))
-  const updateElements = (elements: readonly Element[]) => setElements(curr => new Map(
-    elements.reduce((updatedMap, element) => {
-      const elementId = element.__id
-      return updatedMap.has(elementId) ? updatedMap.set(element.__id, element) : updatedMap
-    }, curr)
-  ))
-
-  const removeElement = (elementId: UUID) => setElements(curr => {
-    curr.delete(elementId)
-    return new Map(curr)
-  })
-  const removeElements = (elementIds: readonly UUID[]) => setElements(curr => {
-    elementIds.forEach(e => curr.delete(e))
-    return new Map(curr)
-  })
-
-  const elementsContext = {
-    elements,
-    addElement,
-    addElements,
-    updateElement,
-    updateElements,
-    removeElement,
-    removeElements
-  }
+  const elementsContext = buildElementsContext(elements, setElements)
 
   // initial game setup
 
@@ -118,14 +41,14 @@ function App() {
     const tick = setInterval(() => {
       processTick({
         currentResources: { crystals, gas },
-        addCrystals,
-        removeCrystals,
-        addGas,
-        removeGas,
-        logInfo,
-        logAlert,
+        addCrystals: resourcesContext.addCrystals,
+        removeCrystals: resourcesContext.removeCrystals,
+        addGas: resourcesContext.addGas,
+        removeGas: resourcesContext.removeGas,
+        logInfo: logContext.logInfo,
+        logAlert: logContext.logAlert,
         elements: [...elements.values()],
-        updateElements
+        updateElements: elementsContext.updateElements
       })
     }, 1000)
     return () => clearInterval(tick)
